@@ -15,7 +15,7 @@
 <body>
 
     <div class="profile-container">
-        <h1>Profil Pasien</h1>
+        <h1>Profile Pasien Klinik</h1>
         <p>Berikut adalah data profil Anda yang tersimpan di sistem kami.</p>
         <hr>
 
