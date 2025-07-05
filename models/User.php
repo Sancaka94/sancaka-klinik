@@ -169,8 +169,8 @@ class User {
     }
 
     /**
-     * [FUNGSI BARU] Mengambil semua data dari tabel 'pasien' dan 'pengguna'
-     * berdasarkan id_pengguna.
+     * [FUNGSI BARU & DIPERBAIKI] Mengambil semua data dari tabel 'pasien' dan 'pengguna'
+     * berdasarkan id_pengguna, tanpa menggunakan get_result().
      * @param int $id_pengguna ID pengguna yang sedang login.
      * @return array|null Data profil gabungan jika ditemukan, atau null jika tidak.
      */
@@ -189,12 +189,21 @@ class User {
 
         $stmt->bind_param("i", $id_pengguna);
         $stmt->execute();
-        
-        // Karena kita tidak menggunakan mysqlnd, kita harus mengambil hasilnya secara manual
-        $result = $stmt->get_result();
-        if ($result->num_rows > 0) {
-            // fetch_assoc() akan mengembalikan baris data sebagai array asosiatif
-            return $result->fetch_assoc();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            // Cara dinamis untuk bind semua kolom hasil ke sebuah array
+            $data = [];
+            $meta = $stmt->result_metadata();
+            $params = [];
+            while ($field = $meta->fetch_field()) {
+                $params[] = &$data[$field->name];
+            }
+
+            call_user_func_array([$stmt, 'bind_result'], $params);
+            
+            $stmt->fetch();
+            return $data;
         }
 
         return null;
