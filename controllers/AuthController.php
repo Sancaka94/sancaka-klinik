@@ -3,20 +3,24 @@ require_once __DIR__ . '/../models/User.php';
 
 class AuthController {
 
-    // ... (method login, register, authenticate, logout tetap sama) ...
+    // Metode login, authenticate, logout, register, dan registrasi_berhasil tetap sama...
     public function login() {
         require __DIR__ . '/../views/auth/login.php';
     }
+
     public function authenticate() {
         $userModel = new User();
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
         $id_peran = $_POST['id_peran'] ?? '';
+
         if (empty($username) || empty($password) || empty($id_peran)) {
             header("Location: ?url=auth/login&error=Semua field harus diisi.");
             exit;
         }
+
         $user = $userModel->login($username, $password, $id_peran);
+
         if ($user) {
             if (session_status() == PHP_SESSION_NONE) session_start();
             $_SESSION['user'] = $user;
@@ -33,17 +37,66 @@ class AuthController {
         }
         exit;
     }
+
     public function logout() {
         if (session_status() == PHP_SESSION_NONE) session_start();
         session_destroy();
         header("Location: ?url=home");
         exit;
     }
+
     public function register() {
         require __DIR__ . '/../views/auth/register.php';
     }
+
     public function registrasi_berhasil() {
         require __DIR__ . '/../views/auth/registrasi_berhasil.php';
+    }
+
+    /**
+     * [DITINGKATKAN] Fungsi helper untuk menangani upload file dengan validasi.
+     * @param array|null $file - Elemen dari $_FILES.
+     * @param string $uploadDir - Direktori tujuan upload.
+     * @return string|null - Mengembalikan nama file unik jika berhasil, atau null jika gagal/tidak ada file.
+     */
+    private function handleFileUpload($file, $uploadDir) {
+        // Jika tidak ada file yang di-upload atau ada error, kembalikan null.
+        // Controller akan memutuskan apakah ini adalah sebuah error (jika file wajib).
+        if ($file === null || $file['error'] !== UPLOAD_ERR_OK) {
+            // Anda bisa log error spesifik di sini untuk debugging
+            if (isset($file['error']) && $file['error'] !== UPLOAD_ERR_NO_FILE) {
+                error_log("File upload error code: " . $file['error']);
+            }
+            return null;
+        }
+
+        // [BARU] Validasi ekstensi file
+        $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
+        if (!in_array($fileExtension, $allowedExtensions)) {
+            error_log("Invalid file type uploaded: " . $fileExtension);
+            return null; // Ekstensi tidak diizinkan
+        }
+
+        // [BARU] Validasi ukuran file (misal: maks 5MB)
+        $maxFileSize = 5 * 1024 * 1024; // 5 MB
+        if ($file['size'] > $maxFileSize) {
+            error_log("File size exceeds limit: " . $file['size']);
+            return null; // File terlalu besar
+        }
+
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $uniqueFilename = uniqid('file_', true) . '.' . $fileExtension;
+        $targetPath = $uploadDir . $uniqueFilename;
+
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            return $uniqueFilename;
+        }
+
+        return null; // Gagal memindahkan file
     }
 
 
@@ -57,6 +110,28 @@ class AuthController {
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $_SESSION['registration_error'] = ['message' => 'Permintaan tidak valid.'];
+            header("Location: ?url=auth/register");
+            exit;
+        }
+
+        // --- [PERBAIKAN 1: Penanganan File Upload yang Lebih Kuat] ---
+        $ktpFilename = $this->handleFileUpload($_FILES['file_ktp'] ?? null, 'uploads/ktp/');
+        $kkFilename = $this->handleFileUpload($_FILES['file_kk'] ?? null, 'uploads/kk/');
+        $profilePicFilename = $this->handleFileUpload($_FILES['foto_profil'] ?? null, 'uploads/profil/');
+
+        // --- [PERBAIKAN 2: Validasi File Wajib di Controller] ---
+        // Asumsikan KTP adalah file yang wajib di-upload.
+        if ($ktpFilename === null) {
+            $ktpError = $_FILES['file_ktp']['error'] ?? UPLOAD_ERR_NO_FILE;
+            $message = 'Upload File KTP Gagal.';
+            $solution = 'Pastikan file tidak rusak, ukurannya tidak lebih dari 5MB, dan formatnya adalah JPG, PNG, atau PDF.';
+
+            if ($ktpError === UPLOAD_ERR_NO_FILE) {
+                $message = 'File KTP Wajib Diisi.';
+                $solution = 'Mohon upload scan atau foto KTP Anda untuk melanjutkan pendaftaran.';
+            }
+
+            $_SESSION['registration_error'] = ['message' => $message, 'solution' => $solution];
             header("Location: ?url=auth/register");
             exit;
         }
@@ -84,17 +159,17 @@ class AuthController {
             'riwayat_alergi'    => $_POST['riwayat_alergi'] ?? '',
             'status_bpjs'       => $_POST['status_bpjs'] ?? 'Tidak Ada',
             'nomor_bpjs'        => $_POST['nomor_bpjs'] ?? null,
-            'file_ktp'          => $_FILES['file_ktp'] ?? null,
-            'file_kk'           => $_FILES['file_kk'] ?? null,
-            'foto_profil'       => $_FILES['foto_profil'] ?? null,
-            'tanda_tangan'      => $_POST['tanda_tangan'] ?? ''
+            'tanda_tangan'      => $_POST['tanda_tangan'] ?? '',
+            'file_ktp'          => $ktpFilename,
+            'file_kk'           => $kkFilename,
+            'foto_profil'       => $profilePicFilename,
         ];
 
-        // **PERBAIKAN:** Pesan solusi yang lebih spesifik untuk duplikasi data
+        // Validasi duplikasi data
         if ($userModel->emailExists($data['email'])) {
             $_SESSION['registration_error'] = [
                 'message' => 'Email yang Anda masukkan sudah terdaftar.',
-                'solution' => '<ul><li><b>Gunakan Email Lain:</b> Silakan coba mendaftar dengan alamat email yang berbeda.</li><li><b>Login dengan Akun yang Ada:</b> Jika ini adalah email Anda, kemungkinan Anda sudah memiliki akun. Silakan coba login.</li></ul>'
+                'solution' => '<ul><li>Gunakan email lain.</li><li>Jika ini email Anda, silakan coba login.</li></ul>'
             ];
             header("Location: ?url=auth/register");
             exit;
@@ -102,18 +177,40 @@ class AuthController {
         if (!empty($data['nomor_telepon']) && $userModel->phoneExists($data['nomor_telepon'])) {
             $_SESSION['registration_error'] = [
                 'message' => 'Nomor telepon yang Anda masukkan sudah digunakan.',
-                'solution' => '<ul><li><b>Gunakan Nomor Telepon Lain:</b> Coba daftarkan akun dengan nomor telepon yang berbeda.</li><li><b>Login dengan Akun yang Ada:</b> Jika Anda merasa ini adalah nomor Anda, kemungkinan Anda sudah terdaftar. Silakan coba login.</li></ul>'
+                'solution' => '<ul><li>Gunakan nomor telepon lain.</li><li>Jika ini nomor Anda, silakan coba login.</li></ul>'
             ];
             header("Location: ?url=auth/register");
             exit;
         }
 
+        /*
+         * [SARAN #2] Implementasi Transaksi di Model (User.php)
+         * Sebaiknya, di dalam method User->register(), Anda menggunakan transaksi
+         * untuk memastikan semua data (misal ke tabel 'pengguna' dan 'pasien')
+         * berhasil disimpan atau tidak sama sekali.
+         *
+         * Contoh di dalam User->register($data):
+         *
+         * $this->db->beginTransaction();
+         * try {
+         * // 1. INSERT ke tabel pengguna
+         * // 2. Dapatkan ID pengguna baru
+         * // 3. INSERT ke tabel pasien dengan ID pengguna tsb
+         *
+         * $this->db->commit();
+         * return true;
+         * } catch (Exception $e) {
+         * $this->db->rollBack();
+         * error_log($e->getMessage()); // Catat error
+         * return false;
+         * }
+         */
         if ($userModel->register($data)) {
             header("Location: ?url=auth/registrasi_berhasil");
         } else {
              $_SESSION['registration_error'] = [
                 'message' => 'Registrasi Gagal',
-                'solution' => 'Terjadi kesalahan pada server. Silakan coba lagi beberapa saat, atau hubungi administrasi jika masalah berlanjut.'
+                'solution' => 'Terjadi kesalahan pada server saat menyimpan data. Silakan coba lagi beberapa saat, atau hubungi administrasi jika masalah berlanjut.'
             ];
             header("Location: ?url=auth/register");
         }
