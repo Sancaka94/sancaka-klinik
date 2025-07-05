@@ -165,7 +165,7 @@ class User {
     }
 
     /**
-     * Mengambil semua data dari tabel 'pasien' dan 'pengguna' berdasarkan id_pengguna.
+     * [DIPERBAIKI] Mengambil semua data dari tabel 'pasien' dan 'pengguna' berdasarkan id_pengguna.
      */
     public function getPatientProfileById($id_pengguna) {
         $query = "SELECT p.*, u.email, u.username 
@@ -181,10 +181,21 @@ class User {
 
         $stmt->bind_param("i", $id_pengguna);
         $stmt->execute();
-        
-        $result = $stmt->get_result();
-        if ($result->num_rows > 0) {
-            return $result->fetch_assoc();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            // Cara dinamis untuk bind semua kolom hasil ke sebuah array
+            $data = [];
+            $meta = $stmt->result_metadata();
+            $params = [];
+            while ($field = $meta->fetch_field()) {
+                $params[] = &$data[$field->name];
+            }
+
+            call_user_func_array([$stmt, 'bind_result'], $params);
+            
+            $stmt->fetch();
+            return $data;
         }
 
         return null;
@@ -192,8 +203,6 @@ class User {
     
     /**
      * [DIPERBARUI] Memperbarui data profil pasien di database dengan semua field.
-     * @param array $data Data dari form profil.
-     * @return bool True jika berhasil, false jika gagal.
      */
     public function updatePatientProfile($data) {
         $query = "UPDATE pasien SET 
