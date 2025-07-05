@@ -53,36 +53,25 @@ class AuthController {
         require __DIR__ . '/../views/auth/registrasi_berhasil.php';
     }
 
-    /**
-     * [DITINGKATKAN] Fungsi helper untuk menangani upload file dengan validasi.
-     * @param array|null $file - Elemen dari $_FILES.
-     * @param string $uploadDir - Direktori tujuan upload.
-     * @return string|null - Mengembalikan nama file unik jika berhasil, atau null jika gagal/tidak ada file.
-     */
     private function handleFileUpload($file, $uploadDir) {
-        // Jika tidak ada file yang di-upload atau ada error, kembalikan null.
-        // Controller akan memutuskan apakah ini adalah sebuah error (jika file wajib).
         if ($file === null || $file['error'] !== UPLOAD_ERR_OK) {
-            // Anda bisa log error spesifik di sini untuk debugging
             if (isset($file['error']) && $file['error'] !== UPLOAD_ERR_NO_FILE) {
                 error_log("File upload error code: " . $file['error']);
             }
             return null;
         }
 
-        // [BARU] Validasi ekstensi file
         $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
         if (!in_array($fileExtension, $allowedExtensions)) {
             error_log("Invalid file type uploaded: " . $fileExtension);
-            return null; // Ekstensi tidak diizinkan
+            return null;
         }
 
-        // [BARU] Validasi ukuran file (misal: maks 5MB)
         $maxFileSize = 5 * 1024 * 1024; // 5 MB
         if ($file['size'] > $maxFileSize) {
             error_log("File size exceeds limit: " . $file['size']);
-            return null; // File terlalu besar
+            return null;
         }
 
         if (!is_dir($uploadDir)) {
@@ -96,19 +85,12 @@ class AuthController {
             return $uniqueFilename;
         }
 
-        return null; // Gagal memindahkan file
+        return null;
     }
 
-
-    /**
-     * Memproses semua data dari form registrasi multi-langkah.
-     */
-        public function processRegister() {
-    die("Tes A: Fungsi processRegister() berhasil dijalankan."); // <--- TAMBAHKAN INI
-    
-
-    if (session_status() == PHP_SESSION_NONE) {
-    // ... sisa kode
+    public function processRegister() {
+        
+        
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
@@ -119,13 +101,10 @@ class AuthController {
             exit;
         }
 
-        // --- [PERBAIKAN 1: Penanganan File Upload yang Lebih Kuat] ---
         $ktpFilename = $this->handleFileUpload($_FILES['file_ktp'] ?? null, 'uploads/ktp/');
         $kkFilename = $this->handleFileUpload($_FILES['file_kk'] ?? null, 'uploads/kk/');
         $profilePicFilename = $this->handleFileUpload($_FILES['foto_profil'] ?? null, 'uploads/profil/');
 
-        // --- [PERBAIKAN 2: Validasi File Wajib di Controller] ---
-        // Asumsikan KTP adalah file yang wajib di-upload.
         if ($ktpFilename === null) {
             $ktpError = $_FILES['file_ktp']['error'] ?? UPLOAD_ERR_NO_FILE;
             $message = 'Upload File KTP Gagal.';
@@ -170,7 +149,6 @@ class AuthController {
             'foto_profil'       => $profilePicFilename,
         ];
 
-        // Validasi duplikasi data
         if ($userModel->emailExists($data['email'])) {
             $_SESSION['registration_error'] = [
                 'message' => 'Email yang Anda masukkan sudah terdaftar.',
@@ -188,28 +166,6 @@ class AuthController {
             exit;
         }
 
-        /*
-         * [SARAN #2] Implementasi Transaksi di Model (User.php)
-         * Sebaiknya, di dalam method User->register(), Anda menggunakan transaksi
-         * untuk memastikan semua data (misal ke tabel 'pengguna' dan 'pasien')
-         * berhasil disimpan atau tidak sama sekali.
-         *
-         * Contoh di dalam User->register($data):
-         *
-         * $this->db->beginTransaction();
-         * try {
-         * // 1. INSERT ke tabel pengguna
-         * // 2. Dapatkan ID pengguna baru
-         * // 3. INSERT ke tabel pasien dengan ID pengguna tsb
-         *
-         * $this->db->commit();
-         * return true;
-         * } catch (Exception $e) {
-         * $this->db->rollBack();
-         * error_log($e->getMessage()); // Catat error
-         * return false;
-         * }
-         */
         if ($userModel->register($data)) {
             header("Location: ?url=auth/registrasi_berhasil");
         } else {
@@ -221,4 +177,5 @@ class AuthController {
         }
         exit;
     }
-}
+    
+} // <-- INI ADALAH KURUNG KURAWAL PENUTUP YANG HILANG. SEKARANG SUDAH ADA.
