@@ -98,22 +98,43 @@ class User {
         }
     }
 
+    /**
+     * [DIPERBAIKI] Fungsi login yang tidak menggunakan get_result() agar kompatibel.
+     */
     public function login($username, $password, $id_peran) {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
+        // Secara eksplisit sebutkan kolom yang dibutuhkan
+        $query = "SELECT id_pengguna, username, email, password, id_peran FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
+        
         $stmt = $this->conn->prepare($query);
         if ($stmt === false) {
             $this->log_to_file("SQL PREPARE FAILED (login): " . $this->conn->error);
             return false;
         }
+
         $stmt->bind_param("ssi", $username, $username, $id_peran);
         $stmt->execute();
-        $result = $stmt->get_result();
-        if ($result->num_rows > 0) {
-            $user = $result->fetch_assoc();
-            if (password_verify($password, $user['password'])) {
+        
+        // Simpan hasil agar bisa mengecek jumlah baris
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            // Ikat hasil ke variabel-variabel
+            $stmt->bind_result($id_pengguna, $db_username, $db_email, $db_password, $db_id_peran);
+            $stmt->fetch();
+
+            // Verifikasi password
+            if (password_verify($password, $db_password)) {
+                // Buat array user secara manual
+                $user = [
+                    'id_pengguna' => $id_pengguna,
+                    'username' => $db_username,
+                    'email' => $db_email,
+                    'id_peran' => $db_id_peran
+                ];
                 return $user;
             }
         }
+        
         return false;
     }
 
@@ -121,10 +142,9 @@ class User {
         $query = "SELECT id_pengguna FROM " . $this->table_name . " WHERE email = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
         
-        // [FINAL DEBUG] Cek apakah prepare() gagal dan catat errornya.
         if ($stmt === false) {
             $this->log_to_file("SQL PREPARE FAILED (emailExists): " . $this->conn->error);
-            return true; // Anggap ada untuk mencegah error fatal lebih lanjut
+            return true;
         }
         
         $stmt->bind_param("s", $email);
@@ -137,10 +157,9 @@ class User {
         $query = "SELECT id_pasien FROM pasien WHERE nomor_telepon = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
         
-        // [FINAL DEBUG] Cek apakah prepare() gagal dan catat errornya.
         if ($stmt === false) {
             $this->log_to_file("SQL PREPARE FAILED (phoneExists): " . $this->conn->error);
-            return true; // Anggap ada untuk mencegah error fatal lebih lanjut
+            return true;
         }
         
         $stmt->bind_param("s", $phone);
