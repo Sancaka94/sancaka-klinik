@@ -25,6 +25,8 @@
     Di sini Anda bisa menambahkan link ke file JavaScript kustom Anda jika ada.
     Contoh: <script src="/apps/klinik-app/js/app.js"></script>
 -->
+// Tambahkan komentar
+// Tes auto push Git
 
 </body>
 </html>
