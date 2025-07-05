@@ -1,5 +1,14 @@
 <?php
-require_once __DIR__ . '/../config/Database.php';
+// [PERIKSA DI SINI] Pastikan path ini benar-benar menunjuk ke file koneksi database Anda.
+// Path ini mengasumsikan ada folder 'config' di direktori utama aplikasi Anda.
+$database_file = __DIR__ . '/../config/Database.php';
+
+// Cek apakah file database ada sebelum mencoba memuatnya.
+if (!file_exists($database_file)) {
+    // Hentikan eksekusi dan berikan pesan error yang jelas jika file tidak ditemukan.
+    die("FATAL ERROR: File konfigurasi database tidak ditemukan. Harap periksa apakah file di path berikut ini ada: " . $database_file);
+}
+require_once $database_file;
 
 class User {
     private $conn;
