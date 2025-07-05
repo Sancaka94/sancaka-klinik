@@ -1,63 +1,172 @@
 <?php 
-// Panggil file header layout baru Anda
-require_once __DIR__ . '/../layouts/header_public.php'; 
+// File: views/home.php
+// Menggunakan layout untuk halaman publik
+require_once __DIR__ . '/layouts/header_public.php'; 
 ?>
 
+<style>
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(rgba(0, 123, 255, 0.1), rgba(0, 123, 255, 0.1)), url('https://images.unsplash.com/photo-1551192422-a89470dd4207?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1932&q=80') no-repeat center center;
+        background-size: cover;
+        padding: 100px 0;
+        text-align: center;
+        color: #333;
+    }
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: var(--dark-color);
+    }
+    .hero-section p {
+        font-size: 1.25rem;
+        color: var(--secondary-color);
+        max-width: 700px;
+        margin: 20px auto;
+    }
+    .hero-section .btn {
+        font-size: 1.1rem;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: 80px 0;
+    }
+    .feature-item {
+        text-align: center;
+        padding: 20px;
+    }
+    .feature-item .icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        display: inline-block;
+        background-color: #e7f3ff;
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        border-radius: 50%;
+    }
+    .feature-item h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    /* Roles Section */
+    .roles-section {
+        background-color: #f8f9fa;
+        padding: 80px 0;
+    }
+    .role-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+        padding: 40px;
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .role-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+    }
+    .role-card h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    .role-card p {
+        margin-bottom: 30px;
+        min-height: 50px;
+    }
+    .role-card .btn {
+        margin: 5px;
+    }
+    
+    /* Staff Login Section */
+    .staff-login-section {
+        padding: 60px 0;
+        text-align: center;
+    }
+</style>
+
 <!-- Hero Section -->
-<div class="container col-xxl-8 px-4 py-5">
-    <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
-        <div class="col-10 col-sm-8 col-lg-6">
-            <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop" class="d-block mx-lg-auto img-fluid rounded-3 shadow-lg" alt="Dokter sedang memeriksa pasien" width="700" height="500" loading="lazy">
-        </div>
-        <div class="col-lg-6">
-            <h1 class="display-5 fw-bold lh-1 mb-3">Layanan Kesehatan Modern untuk Pemulihan Anda</h1>
-            <p class="lead">Selamat datang di Klinik Sancaka. Kami menyediakan pelayanan medis profesional dengan dokter berpengalaman dan fasilitas modern untuk Anda dan keluarga.</p>
-            <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
-                <!-- Di bagian mana pun di halaman Anda -->
-                <a href="?url=auth/register_dokter" class="tombol-pendaftaran-dokter">Bergabung Sebagai Dokter</a>
-                <a href="?url=janjitemu/buat" type="button" class="btn btn-primary btn-lg px-4 me-md-2">Buat Janji Temu Sekarang</a>
-                <a href="?url=auth/register" type="button" class="btn btn-outline-secondary btn-lg px-4">Daftar Sebagai Pasien Baru</a>
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-4">Pelayanan Kesehatan Terpadu di Ujung Jari Anda</h1>
+        <p class="lead">Atur janji temu dengan dokter pilihan, akses riwayat medis, dan dapatkan pelayanan terbaik dengan mudah dan cepat melalui platform digital kami.</p>
+        <a href="?url=janjitemu/buat" class="btn btn-primary btn-lg">Buat Janji Temu Sekarang</a>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="features-section">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <span class="icon"><i class="bi bi-calendar2-check-fill"></i></span>
+                    <h3>Jadwal Fleksibel</h3>
+                    <p class="text-muted">Pilih dokter dan waktu konsultasi yang paling sesuai dengan jadwal Anda tanpa harus mengantre.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <span class="icon"><i class="bi bi-file-earmark-medical-fill"></i></span>
+                    <h3>Rekam Medis Digital</h3>
+                    <p class="text-muted">Akses seluruh riwayat kesehatan dan hasil konsultasi Anda kapan saja dan di mana saja dengan aman.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <span class="icon"><i class="bi bi-people-fill"></i></span>
+                    <h3>Dokter Profesional</h3>
+                    <p class="text-muted">Terhubung dengan dokter-dokter berpengalaman dan tersertifikasi di berbagai bidang spesialisasi.</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Bagian Layanan (Tidak ada perubahan, tetap sama) -->
-<div class="container px-4 py-5" id="layanan">
-    <h2 class="pb-2 border-bottom text-center">Layanan Unggulan Kami</h2>
-    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-        <div class="col d-flex align-items-start">
-            <div class="icon-square bg-light text-dark flex-shrink-0 me-3 p-2">
-                <i class="bi bi-person-arms-up fs-2 text-primary"></i>
+<!-- Roles Section -->
+<div class="roles-section">
+    <div class="container">
+        <div class="row">
+            <!-- Card untuk Pasien -->
+            <div class="col-lg-6 mb-4">
+                <div class="role-card h-100">
+                    <h2>Untuk Pasien</h2>
+                    <p class="text-muted">Daftar untuk membuat janji temu, melihat riwayat medis, dan mengelola profil kesehatan Anda.</p>
+                    <a href="?url=auth/register" class="btn btn-success btn-lg">Daftar Sekarang</a>
+                    <a href="?url=auth/login" class="btn btn-outline-primary btn-lg">Login</a>
+                </div>
             </div>
-            <div>
-                <h4>Fisioterapi</h4>
-                <p>Program terstruktur untuk mengembalikan fungsi gerak dan mengurangi nyeri.</p>
-            </div>
-        </div>
-        <div class="col d-flex align-items-start">
-            <div class="icon-square bg-light text-dark flex-shrink-0 me-3 p-2">
-                 <i class="bi bi-puzzle fs-2 text-primary"></i>
-            </div>
-            <div>
-                <h4>Terapi Okupasi</h4>
-                <p>Membantu Anda kembali mandiri dalam aktivitas penting sehari-hari.</p>
-            </div>
-        </div>
-        <div class="col d-flex align-items-start">
-            <div class="icon-square bg-light text-dark flex-shrink-0 me-3 p-2">
-                <i class="bi bi-clipboard2-pulse fs-2 text-primary"></i>
-            </div>
-            <div>
-                <h4>Pemeriksaan Rutin</h4>
-                <p>Layanan laboratorium lengkap untuk pemeriksaan darah, urin, dan tes diagnostik lainnya.</p>
+            <!-- Card untuk Dokter -->
+            <div class="col-lg-6 mb-4">
+                <div class="role-card h-100">
+                    <h2>Untuk Dokter</h2>
+                    <p class="text-muted">Bergabunglah dengan tim medis kami untuk memberikan pelayanan dan mengelola jadwal praktik Anda secara online.</p>
+                    <a href="?url=auth/register_dokter" class="btn btn-info btn-lg text-white">Bergabunglah dengan Kami</a>
+                    <a href="?url=auth/login" class="btn btn-outline-primary btn-lg">Login</a>
+                </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Staff Login Section -->
+<div class="staff-login-section">
+    <div class="container">
+        <p class="text-muted">Apakah Anda bagian dari staf atau manajemen klinik?</p>
+        <a href="?url=auth/login">Login sebagai Staf/Admin/Owner</a>
     </div>
 </div>
 
 
 <?php 
-// Panggil file footer layout Anda
+// Memanggil footer layout publik
 require_once __DIR__ . '/../layouts/footer_public.php'; 
 ?>
