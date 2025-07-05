@@ -4,48 +4,79 @@ require_once __DIR__ . '/../models/User.php';
 class ProfileController {
 
     public function __construct() {
-        // Pastikan session sudah dimulai
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
     }
     
-    /**
-     * Metode default, bisa diarahkan ke pengaturan.
-     */
     public function index() {
         $this->pengaturan();
     }
 
-    /**
-     * Menampilkan halaman pengaturan profil pasien.
-     */
     public function pengaturan() {
-        // 1. Cek apakah pengguna sudah login
         if (!isset($_SESSION['user'])) {
-            // Jika belum, alihkan ke halaman login
             header("Location: ?url=auth/login&error=Anda harus login untuk mengakses halaman ini.");
             exit;
         }
 
-        // 2. Buat instance dari model User
         $userModel = new User();
-
-        // 3. Ambil ID pengguna dari session
         $id_pengguna = $_SESSION['user']['id_pengguna'];
-
-        // 4. Panggil fungsi baru untuk mendapatkan data profil lengkap
         $data_pasien = $userModel->getPatientProfileById($id_pengguna);
 
-        // 5. Cek apakah data pasien ditemukan
         if ($data_pasien) {
-            // Jika ditemukan, muat halaman view dan kirimkan datanya
-            // Pastikan Anda memiliki file view di: /views/profile/pengaturan.php
+            // Muat halaman view dan kirimkan datanya
             require __DIR__ . '/../views/profile/pengaturan.php';
         } else {
-            // Jika tidak ditemukan, tampilkan pesan error
-            // Ini adalah pesan yang Anda lihat di screenshot
             die("Error: Data pasien tidak ditemukan.");
         }
+    }
+    
+    /**
+     * [DIPERBARUI] Memproses pembaruan data profil dengan semua field.
+     */
+    public function update() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: ?url=profile/pengaturan");
+            exit;
+        }
+        
+        if (!isset($_SESSION['user'])) {
+            header("Location: ?url=auth/login&error=Sesi Anda telah berakhir.");
+            exit;
+        }
+        
+        // Kumpulkan semua data dari form yang bisa diubah
+        $data = [
+            'id_pasien'             => $_POST['id_pasien'],
+            'nama_lengkap'          => $_POST['nama_lengkap'] ?? null,
+            'tempat_lahir'          => $_POST['tempat_lahir'] ?? null,
+            'tanggal_lahir'         => $_POST['tanggal_lahir'] ?? null,
+            'jenis_kelamin'         => $_POST['jenis_kelamin'] ?? null,
+            'agama'                 => $_POST['agama'] ?? null,
+            'status_perkawinan'     => $_POST['status_perkawinan'] ?? null,
+            'nomor_telepon'         => $_POST['nomor_telepon'] ?? null,
+            'kontak_darurat'        => $_POST['kontak_darurat'] ?? null,
+            'alamat'                => $_POST['alamat'] ?? null,
+            'pendidikan_terakhir'   => $_POST['pendidikan_terakhir'] ?? null,
+            'pekerjaan'             => $_POST['pekerjaan'] ?? null,
+            'golongan_darah'        => $_POST['golongan_darah'] ?? null,
+            'status_bpjs'           => $_POST['status_bpjs'] ?? null,
+            'nomor_bpjs'            => $_POST['nomor_bpjs'] ?? null,
+            'riwayat_penyakit'      => $_POST['riwayat_penyakit'] ?? null,
+            'riwayat_alergi'        => $_POST['riwayat_alergi'] ?? null
+            // NIK dan Email sengaja tidak disertakan karena tidak boleh diubah
+        ];
+        
+        $userModel = new User();
+        
+        // Panggil method di model untuk update database
+        if ($userModel->updatePatientProfile($data)) {
+            // Jika berhasil, kembali ke halaman profil dengan pesan sukses
+            header("Location: ?url=profile/pengaturan&status=sukses");
+        } else {
+            // Jika gagal, kembali dengan pesan error
+            header("Location: ?url=profile/pengaturan&status=gagal");
+        }
+        exit;
     }
 }
