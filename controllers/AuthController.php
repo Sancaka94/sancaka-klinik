@@ -51,20 +51,21 @@ class AuthController {
      * Memproses semua data dari form registrasi multi-langkah.
      */
     public function processRegister() {
-        // Validasi dasar bahwa request adalah POST
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header("Location: ?url=auth/register&error=Invalid request.");
+            $_SESSION['registration_error'] = ['message' => 'Permintaan tidak valid.'];
+            header("Location: ?url=auth/register");
             exit;
         }
 
         $userModel = new User();
         
-        // **LOGIKA LENGKAP:** Mengumpulkan semua data dari $_POST dan $_FILES
         $data = [
-            // Step 1 & 5
             'email'             => $_POST['email'] ?? '',
             'password'          => $_POST['password'] ?? '',
-            // Step 2
             'nama_lengkap'      => $_POST['nama_lengkap'] ?? '',
             'nik'               => $_POST['nik'] ?? '',
             'tempat_lahir'      => $_POST['tempat_lahir'] ?? '',
@@ -73,42 +74,48 @@ class AuthController {
             'status_perkawinan' => $_POST['status_perkawinan'] ?? '',
             'pendidikan_terakhir' => $_POST['pendidikan_terakhir'] ?? '',
             'pekerjaan'         => $_POST['pekerjaan'] ?? '',
-            // Step 3
             'alamat'            => $_POST['alamat'] ?? '',
             'nomor_telepon'     => $_POST['nomor_telepon'] ?? '',
             'kontak_darurat'    => $_POST['kontak_darurat'] ?? '',
             'penanggung_jawab'  => $_POST['penanggung_jawab'] ?? '',
-            // Step 4
             'golongan_darah'    => $_POST['golongan_darah'] ?? '',
             'agama'             => $_POST['agama'] ?? '',
             'riwayat_penyakit'  => $_POST['riwayat_penyakit'] ?? '',
             'riwayat_alergi'    => $_POST['riwayat_alergi'] ?? '',
             'status_bpjs'       => $_POST['status_bpjs'] ?? 'Tidak Ada',
             'nomor_bpjs'        => $_POST['nomor_bpjs'] ?? null,
-            // Step 5
             'file_ktp'          => $_FILES['file_ktp'] ?? null,
             'file_kk'           => $_FILES['file_kk'] ?? null,
             'foto_profil'       => $_FILES['foto_profil'] ?? null,
             'tanda_tangan'      => $_POST['tanda_tangan'] ?? ''
         ];
 
-        // Validasi email dan nomor telepon sebelum mencoba mendaftar
+        // **PERBAIKAN:** Pesan solusi yang lebih spesifik untuk duplikasi data
         if ($userModel->emailExists($data['email'])) {
-            header("Location: ?url=auth/register&error=Email ini sudah digunakan.");
+            $_SESSION['registration_error'] = [
+                'message' => 'Email yang Anda masukkan sudah terdaftar.',
+                'solution' => '<ul><li><b>Gunakan Email Lain:</b> Silakan coba mendaftar dengan alamat email yang berbeda.</li><li><b>Login dengan Akun yang Ada:</b> Jika ini adalah email Anda, kemungkinan Anda sudah memiliki akun. Silakan coba login.</li></ul>'
+            ];
+            header("Location: ?url=auth/register");
             exit;
         }
         if (!empty($data['nomor_telepon']) && $userModel->phoneExists($data['nomor_telepon'])) {
-            header("Location: ?url=auth/register&error=Nomor telepon ini sudah digunakan.");
+            $_SESSION['registration_error'] = [
+                'message' => 'Nomor telepon yang Anda masukkan sudah digunakan.',
+                'solution' => '<ul><li><b>Gunakan Nomor Telepon Lain:</b> Coba daftarkan akun dengan nomor telepon yang berbeda.</li><li><b>Login dengan Akun yang Ada:</b> Jika Anda merasa ini adalah nomor Anda, kemungkinan Anda sudah terdaftar. Silakan coba login.</li></ul>'
+            ];
+            header("Location: ?url=auth/register");
             exit;
         }
 
-        // Panggil fungsi register di model dengan data yang sudah lengkap
         if ($userModel->register($data)) {
-            // Jika berhasil, arahkan ke halaman konfirmasi sukses
             header("Location: ?url=auth/registrasi_berhasil");
         } else {
-            // Jika gagal, arahkan kembali ke form dengan pesan error
-            header("Location: ?url=auth/register&error=Registrasi gagal karena kesalahan server.");
+             $_SESSION['registration_error'] = [
+                'message' => 'Registrasi Gagal',
+                'solution' => 'Terjadi kesalahan pada server. Silakan coba lagi beberapa saat, atau hubungi administrasi jika masalah berlanjut.'
+            ];
+            header("Location: ?url=auth/register");
         }
         exit;
     }
