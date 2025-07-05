@@ -1,225 +1,227 @@
-<?php
-// File ini dipanggil oleh DashboardController.
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Redirect jika pengguna belum login
-if (!isset($_SESSION['user']) || $_SESSION['user']['id_peran'] != 4) {
-    header('Location: ?url=auth/login&error=Anda harus login sebagai pasien.');
-    exit;
-}
-
-$user = $_SESSION['user'];
-
-// **PERBAIKAN:** Membuat variabel $display_name untuk sapaan
-// Gunakan nama lengkap jika ada, jika tidak, gunakan username.
-$display_name = !empty($user['nama_lengkap']) ? $user['nama_lengkap'] : $user['username'];
-
-// Tentukan path foto profil, gunakan gambar default jika tidak ada
-$default_avatar = 'https://placehold.co/100x100/E2E8F0/4A5568?text=Profil';
-$foto_profil_path = (!empty($user['foto_profil'])) ? 'uploads/profiles/' . htmlspecialchars($user['foto_profil']) : $default_avatar;
-
-// Data notifikasi (ini seharusnya diambil dari model Notifikasi nanti)
-$unread_notifications = 1; 
-
-// Data janji temu (ini seharusnya datang dari controller)
-$riwayat_janji_temu = isset($riwayat_janji_temu) ? $riwayat_janji_temu : [];
-$janji_berikutnya = isset($janji_berikutnya) ? $janji_berikutnya : null;
-$rekam_medis_terakhir = isset($rekam_medis_terakhir) ? $rekam_medis_terakhir : null;
-?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Pasien</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Dasbor Pasien - Klinik Sehat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        :root {
+            --primary-color: #007bff; --secondary-color: #6c757d; --success-color: #28a745;
+            --warning-color: #ffc107; --light-color: #f8f9fa; --dark-color: #343a40;
+            --bg-color: #f4f7f9; --text-color: #495057; --border-color: #dee2e6;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; }
+        .sidebar { width: 260px; background-color: #ffffff; height: 100vh; position: fixed; left: 0; top: 0; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid var(--border-color); z-index: 100; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-header i { font-size: 24px; color: var(--primary-color); }
+        .sidebar-header h2 { font-size: 22px; color: var(--dark-color); }
+        .nav-menu a { display: flex; align-items: center; padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; text-decoration: none; color: var(--secondary-color); font-weight: 500; transition: background-color 0.3s, color 0.3s; }
+        .nav-menu a i { margin-right: 15px; width: 20px; text-align: center; }
+        .nav-menu a:hover, .nav-menu a.active { background-color: var(--primary-color); color: white; }
+        .sidebar-footer { margin-top: auto; }
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { font-size: 28px; color: var(--dark-color); }
+        .user-profile { display: flex; align-items: center; gap: 15px; }
+        .user-profile img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background-color: var(--border-color); }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 25px; }
+        .card-header { font-size: 1.2em; font-weight: 600; margin-bottom: 15px; color: var(--dark-color); border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .appointment-card { background: linear-gradient(135deg, #007bff, #0056b3); color: white; }
+        .appointment-card .card-header { color: white; border-bottom-color: rgba(255,255,255,0.2); }
+        .appointment-card .date { font-size: 1.5em; font-weight: 700; }
+        .appointment-card .doctor { margin-top: 10px; opacity: 0.9; }
+        .history-table { width: 100%; border-collapse: collapse; }
+        .history-table th, .history-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .history-table th { font-size: 14px; color: var(--secondary-color); }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-dijadwalkan { background-color: #e7f3ff; color: #007bff; }
+        .status-selesai { background-color: #eaf7f0; color: #28a745; }
+        .status-dibatalkan { background-color: #fbe9eb; color: #dc3545; }
+        .skeleton { animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; background-color: #e9ecef; border-radius: 6px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .notification-bell { position: relative; cursor: pointer; }
+        .notification-bell .badge { position: absolute; top: -5px; right: -8px; background-color: #dc3545; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 2px solid white; }
+        .notification-dropdown { display: none; position: absolute; top: 120%; right: 0; width: 320px; background-color: white; border-radius: 8px; box-shadow: var(--shadow); border: 1px solid var(--border-color); z-index: 100; }
+        .notification-dropdown.show { display: block; }
+        .notification-header { padding: 15px; font-weight: 600; border-bottom: 1px solid var(--border-color); }
+        .notification-list { max-height: 300px; overflow-y: auto; }
+        .notification-item { display: flex; gap: 10px; padding: 15px; border-bottom: 1px solid var(--border-color); }
+        .notification-item .icon { font-size: 18px; color: var(--primary-color); }
+        .no-data { text-align: center; padding: 40px; color: var(--secondary-color); }
+    </style>
 </head>
-<body class="bg-gray-100">
-
-    <div class="min-h-screen flex flex-col">
-        <!-- Header Navigasi -->
-        <nav class="bg-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
-                    <a href="?url=dashboard/pasien" class="flex items-center space-x-2">
-                        <svg class="h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.5v3m0 9v3m4.5-7.5h3m-15 0h3" /></svg>
-                        <div class="flex-shrink-0 text-2xl font-bold text-indigo-600">Klinik Sehat</div>
-                    </a>
-                    <div class="flex items-center space-x-4">
-                        <a href="?url=notifikasi/index" class="relative text-gray-600 hover:text-indigo-600 p-2 rounded-full">
-                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                            <?php if (isset($unread_notifications) && $unread_notifications > 0): ?>
-                            <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-                            <?php endif; ?>
-                        </a>
-                        <div class="relative">
-                            <button id="profile-menu-button" class="flex text-sm bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                <span class="sr-only">Buka menu pengguna</span>
-                                <img class="h-8 w-8 rounded-full object-cover" src="<?php echo $foto_profil_path; ?>" alt="Foto Profil" onerror="this.onerror=null;this.src='<?php echo $default_avatar; ?>';">
-                            </button>
-                            <div id="profile-menu" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="profile-menu-button">
-                                <div class="px-4 py-2 border-b"><p class="text-sm text-gray-700">Masuk sebagai</p><p class="text-sm font-medium text-gray-900 truncate"><?php echo htmlspecialchars($display_name); ?></p></div>
-                                <a href="?url=profile/pengaturan" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem"><svg class="h-5 w-5 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>Pengaturan Profil</a>
-                                <a href="?url=auth/logout" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem"><svg class="h-5 w-5 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>Logout</a>
-                            </div>
+<body>
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-clinic-medical"></i>
+                <h2>Klinik Sehat</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="?url=dashboard/pasien" class="active"><i class="fas fa-tachometer-alt"></i> Dasbor</a>
+                <a href="?url=janjitemu/buat"><i class="fas fa-calendar-plus"></i> Buat Janji Temu</a>
+                <a href="#"><i class="fas fa-history"></i> Riwayat Medis</a>
+                <a href="?url=profile/pengaturan"><i class="fas fa-user-cog"></i> Pengaturan Profil</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="?url=auth/logout"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1 id="patient-greeting" class="skeleton" style="width: 300px; height: 36px;"></h1>
+                <div class="user-profile">
+                    <div class="notification-bell" id="notification-bell">
+                        <i class="fas fa-bell" style="font-size: 20px; color: var(--secondary-color);"></i>
+                        <span class="badge" id="notification-badge" style="display: none;">0</span>
+                        <div class="notification-dropdown" id="notification-dropdown">
+                            <div class="notification-header">Notifikasi</div>
+                            <div class="notification-list" id="notification-list"></div>
                         </div>
                     </div>
+                    <img id="patient-profile-img" src="" alt="Foto Profil Pasien">
+                </div>
+            </header>
+            
+            <div class="card appointment-card" id="next-appointment-card">
+                <div class="card-header">Janji Temu Berikutnya</div>
+                <div id="next-appointment-details">
+                    <div class="skeleton" style="width: 80%; height: 28px; margin-bottom: 10px;"></div>
+                    <div class="skeleton" style="width: 60%; height: 20px;"></div>
                 </div>
             </div>
-        </nav>
 
-        <!-- Konten Utama -->
-        <main class="flex-grow">
-            <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                
-                <div class="mb-8">
-                    <!-- **PERBAIKAN:** Menggunakan variabel $display_name yang sudah didefinisikan -->
-                    <h1 class="text-3xl font-bold text-gray-800">Selamat Datang, <?php echo htmlspecialchars($display_name); ?>!</h1>
-                    <p class="text-gray-600 mt-1">Ini adalah pusat informasi kesehatan Anda.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <div id="janji-berikutnya-card" class="bg-white rounded-lg shadow p-6"></div>
-                    <div id="rekam-medis-terakhir-card" class="bg-white rounded-lg shadow p-6"></div>
-                    <a href="?url=janjitemu/buat" class="bg-indigo-600 text-white rounded-lg shadow p-6 flex flex-col justify-center items-center hover:bg-indigo-700 transition">
-                        <svg class="h-12 w-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                        <h3 class="mt-2 text-lg font-medium">Buat Janji Temu Baru</h3>
-                    </a>
-                </div>
-
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="p-6 border-b border-gray-200"><h2 class="text-xl font-semibold text-gray-800">Riwayat dan Status Antrian</h2></div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dokter</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Antrian</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="riwayat-table-body" class="bg-white divide-y divide-gray-200">
-                                <!-- Data akan diisi oleh JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="card">
+                <div class="card-header">Riwayat Janji Temu</div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Dokter</th>
+                            <th>Keluhan</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-tbody">
+                        <tr>
+                            <td><div class="skeleton" style="height: 20px; width: 80%;"></div></td>
+                            <td><div class="skeleton" style="height: 20px; width: 90%;"></div></td>
+                            <td><div class="skeleton" style="height: 20px; width: 70%;"></div></td>
+                            <td><div class="skeleton" style="height: 20px; width: 60%;"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </main>
-
-        <footer class="bg-white"><div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-500">&copy; <?php echo date('Y'); ?> Klinik Sehat.</div></footer>
     </div>
 
     <script>
-        // JavaScript untuk dropdown profil
-        const profileMenuButton = document.getElementById('profile-menu-button');
-        const profileMenu = document.getElementById('profile-menu');
-        profileMenuButton.addEventListener('click', () => profileMenu.classList.toggle('hidden'));
-        window.addEventListener('click', (e) => {
-            if (!profileMenuButton.contains(e.target) && !profileMenu.contains(e.target)) {
-                profileMenu.classList.add('hidden');
+        document.addEventListener('DOMContentLoaded', async () => {
+            
+            function updateHeader(patientInfo) {
+                const greetingEl = document.getElementById('patient-greeting');
+                const profileImgEl = document.getElementById('patient-profile-img');
+
+                if (patientInfo && patientInfo.nama_lengkap) {
+                    greetingEl.textContent = `Selamat Datang, ${patientInfo.nama_lengkap}!`;
+                    greetingEl.classList.remove('skeleton');
+                    profileImgEl.src = patientInfo.foto_profil 
+                        ? `uploads/profil/${patientInfo.foto_profil}` 
+                        : 'https://placehold.co/100x100/EFEFEF/AAAAAA/png?text=P';
+                }
             }
-        });
 
-        // JavaScript untuk Realtime Update
-        const janjiCard = document.getElementById('janji-berikutnya-card');
-        const rekamMedisCard = document.getElementById('rekam-medis-terakhir-card');
-        const riwayatTableBody = document.getElementById('riwayat-table-body');
-        const notificationBadge = document.getElementById('notification-badge');
-
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString('id-ID', options);
-        }
-
-        async function updateDashboard() {
-            try {
-                const response = await fetch('?url=dashboard/api');
-                if (!response.ok) return;
-
-                const data = await response.json();
-
-                // 1. Update Kartu Janji Temu Berikutnya
-                if (data.janji_berikutnya) {
-                    janjiCard.innerHTML = `
-                        <h3 class="text-lg font-medium text-gray-900">Janji Temu Berikutnya</h3>
-                        <p class="text-2xl font-semibold text-indigo-600 mt-2">${data.janji_berikutnya.dokter}</p>
-                        <p class="text-sm text-gray-500">${formatDate(data.janji_berikutnya.tanggal_booking)} - Antrian ${data.janji_berikutnya.nomor_antrian}</p>
+            function updateNextAppointment(appointment) {
+                const nextAppointmentEl = document.getElementById('next-appointment-details');
+                if (appointment) {
+                    const tgl = new Date(appointment.tanggal_temu).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    const waktu = new Date(`1970-01-01T${appointment.waktu_temu}`).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    nextAppointmentEl.innerHTML = `
+                        <div class="date">${tgl} pukul ${waktu}</div>
+                        <div class="doctor">dengan <strong>${appointment.nama_dokter}</strong></div>
                     `;
                 } else {
-                    janjiCard.innerHTML = `
-                        <h3 class="text-lg font-medium text-gray-900">Janji Temu Berikutnya</h3>
-                        <p class="text-gray-500 mt-2">Tidak ada janji temu yang direncanakan.</p>
-                    `;
+                    nextAppointmentEl.innerHTML = '<p>Anda tidak memiliki janji temu yang akan datang.</p>';
                 }
+            }
 
-                // 2. Update Kartu Rekam Medis Terakhir
-                if (data.rekam_medis_terakhir) {
-                    rekamMedisCard.innerHTML = `
-                        <h3 class="text-lg font-medium text-gray-900">Rekam Medis Terakhir</h3>
-                        <p class="text-2xl font-semibold text-green-600 mt-2">Pemeriksaan Selesai</p>
-                        <p class="text-sm text-gray-500">${formatDate(data.rekam_medis_terakhir.tanggal_booking)} oleh ${data.rekam_medis_terakhir.dokter}</p>
-                    `;
-                } else {
-                    rekamMedisCard.innerHTML = `
-                        <h3 class="text-lg font-medium text-gray-900">Rekam Medis Terakhir</h3>
-                        <p class="text-gray-500 mt-2">Belum ada rekam medis.</p>
-                    `;
-                }
-
-                // 3. Update Tabel Riwayat
-                riwayatTableBody.innerHTML = '';
-                if (data.riwayat_janji_temu.length > 0) {
-                    data.riwayat_janji_temu.forEach(janji => {
-                        let statusColor = 'bg-gray-100 text-gray-800';
-                        if (janji.status === 'Selesai') statusColor = 'bg-green-100 text-green-800';
-                        if (janji.status === 'Direncanakan') statusColor = 'bg-blue-100 text-blue-800';
-                        if (janji.status === 'Batal') statusColor = 'bg-red-100 text-red-800';
-                        
-                        const aksiHtml = janji.rekam_medis_tersedia
-                            ? `<a href="?url=rekammedis/detail&id=${janji.id}" class="text-indigo-600 hover:text-indigo-900">Lihat Rekam Medis</a>`
-                            : `<span class="text-gray-400">-</span>`;
-
+            function updateHistoryTable(history) {
+                const historyBody = document.getElementById('history-tbody');
+                historyBody.innerHTML = '';
+                if (history && history.length > 0) {
+                    history.forEach(janji => {
+                        const tglRiwayat = new Date(janji.tanggal_temu).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                        const statusClass = `status-${janji.status.toLowerCase().replace(' ', '-')}`;
                         const row = `
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(janji.tanggal_booking)}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${janji.dokter}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">${janji.nomor_antrian || '-'}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">${janji.status}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${aksiHtml}</td>
+                                <td>${tglRiwayat}</td>
+                                <td>${janji.nama_dokter}</td>
+                                <td>${janji.keluhan || '-'}</td>
+                                <td><span class="status-badge ${statusClass}">${janji.status}</span></td>
                             </tr>
                         `;
-                        riwayatTableBody.innerHTML += row;
+                        historyBody.innerHTML += row;
                     });
                 } else {
-                    riwayatTableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Anda belum memiliki riwayat janji temu.</td></tr>`;
+                    historyBody.innerHTML = '<tr><td colspan="4" class="no-data">Belum ada riwayat janji temu.</td></tr>';
                 }
-
-                // 4. Update Badge Notifikasi
-                if (data.unread_notifications > 0) {
-                    notificationBadge.classList.remove('hidden');
-                } else {
-                    notificationBadge.classList.add('hidden');
-                }
-
-            } catch (error) {
-                console.error('Gagal mengambil data dashboard:', error);
             }
-        }
 
-        document.addEventListener('DOMContentLoaded', updateDashboard);
-        setInterval(updateDashboard, 1000);
+            function updateNotifications(notifications) {
+                const badge = document.getElementById('notification-badge');
+                const list = document.getElementById('notification-list');
+                list.innerHTML = '';
+
+                if (notifications && notifications.length > 0) {
+                    badge.textContent = notifications.length;
+                    badge.style.display = 'flex';
+                    notifications.forEach(notif => {
+                        const item = `<a href="${notif.link || '#'}" style="text-decoration:none; color:inherit;"><div class="notification-item"><i class="fas fa-bell icon"></i><div class="message">${notif.pesan}</div></div></a>`;
+                        list.innerHTML += item;
+                    });
+                } else {
+                    badge.style.display = 'none';
+                    list.innerHTML = '<div class="no-data" style="padding: 20px;">Tidak ada notifikasi baru.</div>';
+                }
+            }
+
+            const bell = document.getElementById('notification-bell');
+            const dropdown = document.getElementById('notification-dropdown');
+            bell.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdown.classList.toggle('show');
+            });
+            document.addEventListener('click', () => {
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            async function loadDashboardData() {
+                try {
+                    const response = await fetch('?url=dashboard/api_pasien');
+                    if (!response.ok) throw new Error(`Gagal mengambil data: ${response.statusText}`);
+                    const data = await response.json();
+
+                    updateHeader(data.info_pasien);
+                    updateNextAppointment(data.janji_berikutnya);
+                    updateHistoryTable(data.riwayat_janji);
+                    updateNotifications(data.notifikasi);
+
+                } catch (error) {
+                    console.error('Gagal memuat data dasbor pasien:', error);
+                    document.getElementById('patient-greeting').textContent = 'Gagal memuat data.';
+                }
+            }
+
+            loadDashboardData();
+        });
     </script>
 </body>
 </html>
