@@ -35,10 +35,9 @@ class JanjiTemu {
     }
     
     /**
-     * [FUNGSI BARU] Mengambil semua janji temu untuk dokter tertentu pada hari ini.
+     * Mengambil semua janji temu untuk dokter tertentu pada hari ini.
      */
     public function getAppointmentsForDoctorToday($id_dokter) {
-        // Query ini menggabungkan tabel janji_temu dengan pasien dan pengguna untuk mendapatkan nama & foto pasien
         $query = "SELECT jt.*, p.nama_lengkap, p.foto_profil 
                   FROM janji_temu jt
                   JOIN pasien p ON jt.id_pasien = p.id_pasien
@@ -53,14 +52,16 @@ class JanjiTemu {
         $result = $stmt->get_result();
 
         $appointments = [];
-        while ($row = $result->fetch_assoc()) {
-            $appointments[] = $row;
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $appointments[] = $row;
+            }
         }
         return $appointments;
     }
 
     /**
-     * [FUNGSI BARU] Menghitung statistik janji temu untuk dokter pada hari ini.
+     * Menghitung statistik janji temu untuk dokter pada hari ini.
      */
     public function getAppointmentStatsForDoctorToday($id_dokter) {
         $query = "SELECT 
@@ -71,13 +72,64 @@ class JanjiTemu {
                   WHERE id_dokter = ? AND tanggal_temu = CURDATE()";
 
         $stmt = $this->conn->prepare($query);
-        if ($stmt === false) return ['total_today' => 0, 'total_selesai' => 0, 'total_menunggu' => 0];
+        $default_stats = ['total_today' => 0, 'total_selesai' => 0, 'total_menunggu' => 0];
+        if ($stmt === false) return $default_stats;
 
         $stmt->bind_param("i", $id_dokter);
         $stmt->execute();
         $result = $stmt->get_result();
         
-        // Mengembalikan hasil sebagai array asosiatif
-        return $result->fetch_assoc();
+        return $result ? $result->fetch_assoc() : $default_stats;
+    }
+
+    /**
+     * [FUNGSI BARU] Mengambil janji temu berikutnya untuk pasien.
+     * @param int $id_pasien ID pasien
+     * @return array|null Data janji temu jika ada, atau null
+     */
+    public function getUpcomingAppointmentForPatient($id_pasien) {
+        $query = "SELECT jt.*, u.nama_lengkap as nama_dokter
+                  FROM janji_temu jt
+                  JOIN pengguna u ON jt.id_dokter = u.id_pengguna
+                  WHERE jt.id_pasien = ? AND jt.tanggal_temu >= CURDATE()
+                  ORDER BY jt.tanggal_temu ASC, jt.waktu_temu ASC
+                  LIMIT 1";
+                  
+        $stmt = $this->conn->prepare($query);
+        if ($stmt === false) return null;
+
+        $stmt->bind_param("i", $id_pasien);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result ? $result->fetch_assoc() : null;
+    }
+
+    /**
+     * [FUNGSI BARU] Mengambil riwayat janji temu untuk pasien.
+     * @param int $id_pasien ID pasien
+     * @return array Daftar riwayat janji temu
+     */
+    public function getHistoryForPatient($id_pasien) {
+        $query = "SELECT jt.*, u.nama_lengkap as nama_dokter
+                  FROM janji_temu jt
+                  JOIN pengguna u ON jt.id_dokter = u.id_pengguna
+                  WHERE jt.id_pasien = ?
+                  ORDER BY jt.tanggal_temu DESC, jt.waktu_temu DESC";
+
+        $stmt = $this->conn->prepare($query);
+        if ($stmt === false) return [];
+
+        $stmt->bind_param("i", $id_pasien);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $history = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $history[] = $row;
+            }
+        }
+        return $history;
     }
 }
