@@ -16,7 +16,8 @@ class User {
 
     public function __construct() {
         $database = new Database();
-        $this->conn = $database->getConnection();
+        // Menggunakan metode 'connect()' dari kelas Database Anda
+        $this->conn = $database->connect();
     }
     
     /**
@@ -34,76 +35,74 @@ class User {
     }
 
     /**
-     * [DIPERBAIKI] Mendaftarkan pengguna baru dengan penanganan error.
+     * [DIPERBAIKI] Mendaftarkan pengguna baru dengan MySQLi dan penanganan error.
      */
     public function register($data) {
-        // Asumsi: Tabel 'pasien' dan 'pengguna'
-        // Ganti nama tabel dan kolom sesuai dengan database Anda.
-        
         // Query untuk tabel pengguna
         $query_user = "INSERT INTO pengguna (username, email, password, id_peran) 
-                       VALUES (:username, :email, :password, :id_peran)";
+                       VALUES (?, ?, ?, ?)";
                        
         // Query untuk tabel pasien
         $query_pasien = "INSERT INTO pasien (id_pengguna, nama_lengkap, nik, tempat_lahir, tanggal_lahir, jenis_kelamin, status_perkawinan, pendidikan_terakhir, pekerjaan, alamat, nomor_telepon, kontak_darurat, penanggung_jawab, golongan_darah, agama, riwayat_penyakit, riwayat_alergi, status_bpjs, nomor_bpjs, file_ktp, file_kk, foto_profil, tanda_tangan)
-                         VALUES (:id_pengguna, :nama_lengkap, :nik, :tempat_lahir, :tanggal_lahir, :jenis_kelamin, :status_perkawinan, :pendidikan_terakhir, :pekerjaan, :alamat, :nomor_telepon, :kontak_darurat, :penanggung_jawab, :golongan_darah, :agama, :riwayat_penyakit, :riwayat_alergi, :status_bpjs, :nomor_bpjs, :file_ktp, :file_kk, :foto_profil, :tanda_tangan)";
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        // Gunakan transaksi untuk memastikan kedua query berhasil atau tidak sama sekali.
-        $this->conn->beginTransaction();
+        // Memulai transaksi dengan MySQLi
+        $this->conn->begin_transaction();
 
         try {
             // 1. Eksekusi query untuk tabel pengguna
             $stmt_user = $this->conn->prepare($query_user);
 
-            // Hash password sebelum disimpan
             $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
-            
-            // Untuk pasien, id_peran biasanya 4 (sesuaikan jika berbeda)
-            $id_peran = 4;
-            
-            // Gunakan email sebagai username default
-            $username = $data['email'];
+            $id_peran = 4; // Default untuk pasien
+            $username = $data['email']; // Default username
 
-            $stmt_user->bindParam(':username', $username);
-            $stmt_user->bindParam(':email', $data['email']);
-            $stmt_user->bindParam(':password', $password_hash);
-            $stmt_user->bindParam(':id_peran', $id_peran);
+            // Binding parameter untuk MySQLi (tipe data: s=string, i=integer)
+            $stmt_user->bind_param("sssi", $username, $data['email'], $password_hash, $id_peran);
             
-            $stmt_user->execute();
+            if (!$stmt_user->execute()) {
+                throw new Exception("Gagal eksekusi query pengguna: " . $stmt_user->error);
+            }
             $this->log_to_file("Query ke tabel 'pengguna' berhasil.");
 
             // 2. Dapatkan ID pengguna yang baru saja dibuat
-            $id_pengguna_baru = $this->conn->lastInsertId();
+            $id_pengguna_baru = $this->conn->insert_id;
             $this->log_to_file("ID Pengguna baru didapatkan: $id_pengguna_baru");
 
             // 3. Eksekusi query untuk tabel pasien
             $stmt_pasien = $this->conn->prepare($query_pasien);
+            
+            // Binding parameter untuk MySQLi (i=integer, s=string)
+            $stmt_pasien->bind_param(
+                "issssssssssssssssssssss",
+                $id_pengguna_baru,
+                $data['nama_lengkap'],
+                $data['nik'],
+                $data['tempat_lahir'],
+                $data['tanggal_lahir'],
+                $data['jenis_kelamin'],
+                $data['status_perkawinan'],
+                $data['pendidikan_terakhir'],
+                $data['pekerjaan'],
+                $data['alamat'],
+                $data['nomor_telepon'],
+                $data['kontak_darurat'],
+                $data['penanggung_jawab'],
+                $data['golongan_darah'],
+                $data['agama'],
+                $data['riwayat_penyakit'],
+                $data['riwayat_alergi'],
+                $data['status_bpjs'],
+                $data['nomor_bpjs'],
+                $data['file_ktp'],
+                $data['file_kk'],
+                $data['foto_profil'],
+                $data['tanda_tangan']
+            );
 
-            $stmt_pasien->bindParam(':id_pengguna', $id_pengguna_baru);
-            $stmt_pasien->bindParam(':nama_lengkap', $data['nama_lengkap']);
-            $stmt_pasien->bindParam(':nik', $data['nik']);
-            $stmt_pasien->bindParam(':tempat_lahir', $data['tempat_lahir']);
-            $stmt_pasien->bindParam(':tanggal_lahir', $data['tanggal_lahir']);
-            $stmt_pasien->bindParam(':jenis_kelamin', $data['jenis_kelamin']);
-            $stmt_pasien->bindParam(':status_perkawinan', $data['status_perkawinan']);
-            $stmt_pasien->bindParam(':pendidikan_terakhir', $data['pendidikan_terakhir']);
-            $stmt_pasien->bindParam(':pekerjaan', $data['pekerjaan']);
-            $stmt_pasien->bindParam(':alamat', $data['alamat']);
-            $stmt_pasien->bindParam(':nomor_telepon', $data['nomor_telepon']);
-            $stmt_pasien->bindParam(':kontak_darurat', $data['kontak_darurat']);
-            $stmt_pasien->bindParam(':penanggung_jawab', $data['penanggung_jawab']);
-            $stmt_pasien->bindParam(':golongan_darah', $data['golongan_darah']);
-            $stmt_pasien->bindParam(':agama', $data['agama']);
-            $stmt_pasien->bindParam(':riwayat_penyakit', $data['riwayat_penyakit']);
-            $stmt_pasien->bindParam(':riwayat_alergi', $data['riwayat_alergi']);
-            $stmt_pasien->bindParam(':status_bpjs', $data['status_bpjs']);
-            $stmt_pasien->bindParam(':nomor_bpjs', $data['nomor_bpjs']);
-            $stmt_pasien->bindParam(':file_ktp', $data['file_ktp']);
-            $stmt_pasien->bindParam(':file_kk', $data['file_kk']);
-            $stmt_pasien->bindParam(':foto_profil', $data['foto_profil']);
-            $stmt_pasien->bindParam(':tanda_tangan', $data['tanda_tangan']);
-
-            $stmt_pasien->execute();
+            if (!$stmt_pasien->execute()) {
+                 throw new Exception("Gagal eksekusi query pasien: " . $stmt_pasien->error);
+            }
             $this->log_to_file("Query ke tabel 'pasien' berhasil.");
             
             // Jika semua berhasil, simpan perubahan
@@ -111,12 +110,12 @@ class User {
             $this->log_to_file("Transaksi database di-commit.");
             return true;
 
-        } catch (PDOException $exception) {
+        } catch (Exception $exception) {
             // Jika terjadi error, batalkan semua perubahan
-            $this->conn->rollBack();
+            $this->conn->rollback();
             $this->log_to_file("TRANSAKSI GAGAL! Melakukan rollback.");
             // Catat pesan error SQL yang sebenarnya ke dalam log
-            $this->log_to_file("PDOException", $exception->getMessage());
+            $this->log_to_file("Exception", $exception->getMessage());
             return false;
         }
     }
@@ -124,23 +123,35 @@ class User {
     // Fungsi lain seperti login, emailExists, phoneExists, dll.
     // ...
     public function login($username, $password, $id_peran) {
-        // ... (kode login Anda)
+        $query = "SELECT * FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("ssi", $username, $username, $id_peran);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            if (password_verify($password, $user['password'])) {
+                return $user;
+            }
+        }
+        return false;
     }
 
     public function emailExists($email) {
-        $query = "SELECT id_pengguna FROM " . $this->table_name . " WHERE email = :email LIMIT 1";
+        $query = "SELECT id_pengguna FROM " . $this->table_name . " WHERE email = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':email', $email);
+        $stmt->bind_param("s", $email);
         $stmt->execute();
-        return $stmt->rowCount() > 0;
+        $stmt->store_result();
+        return $stmt->num_rows > 0;
     }
 
     public function phoneExists($phone) {
-        // Asumsi nomor telepon ada di tabel pasien
-        $query = "SELECT id_pasien FROM pasien WHERE nomor_telepon = :phone LIMIT 1";
+        $query = "SELECT id_pasien FROM pasien WHERE nomor_telepon = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':phone', $phone);
+        $stmt->bind_param("s", $phone);
         $stmt->execute();
-        return $stmt->rowCount() > 0;
+        $stmt->store_result();
+        return $stmt->num_rows > 0;
     }
 }
