@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-chrome",
+      "request": "launch",
+      "name": "Launch Web App (Chrome)",
+      "url": "https://sancaka.biz.id/apps/klinik-app",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}

@@ -1,9 +1,20 @@
 <?php
+// controllers/HomeController.php
+
+require_once __DIR__ . '/../config/Database.php'; // pastikan path ini sesuai
+
 class HomeController {
+
+    /**
+     * Menampilkan halaman utama (homepage) untuk pengunjung.
+     */
     public function index() {
-        echo "<h1>Berhasil! Ini HomeController::index()</h1>";
+        require_once __DIR__ . '/../views/home/index.php';
     }
 
+    /**
+     * Menampilkan daftar database di server MySQL (untuk admin/developer).
+     */
     public function databaseList() {
         $db = new Database();
         $conn = $db->connect();
