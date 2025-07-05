@@ -1,79 +1,21 @@
 <?php 
 // File: views/auth/register.php
-// Memastikan layout publik yang benar dipanggil
 require_once __DIR__ . '/../layouts/header_public.php'; 
 ?>
 
 <style>
     /* CSS Kustom untuk formulir multi-langkah */
-    .form-step {
-        display: none;
-        animation: fadeIn 0.5s;
-    }
-    .form-step.active {
-        display: block;
-    }
-    .progress-bar-container {
-        position: relative;
-        display: flex;
-        justify-content: space-between;
-        counter-reset: step;
-        margin-bottom: 3rem;
-    }
-    .progress-bar-container::before, .progress-line {
-        content: "";
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        height: 4px;
-        width: 100%;
-        background-color: #e0e0e0;
-        z-index: -1;
-    }
-    .progress-line {
-        background-color: #0d6efd; /* Bootstrap Primary Color */
-        width: 0%;
-        transition: 0.3s;
-    }
-    .progress-step {
-        width: 2.5rem;
-        height: 2.5rem;
-        background-color: #e0e0e0;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: bold;
-        color: white;
-        transition: background-color 0.3s;
-        position: relative;
-        z-index: 1;
-    }
-    .progress-step::before {
-        counter-increment: step;
-        content: counter(step);
-    }
-    .progress-step::after {
-        content: attr(data-title);
-        position: absolute;
-        top: calc(100% + 0.5rem);
-        font-size: 0.8rem;
-        color: #6c757d;
-        width: 120px;
-        text-align: center;
-    }
-    .progress-step.active {
-        background-color: #0d6efd;
-    }
-    #signature-pad {
-        border: 2px dashed #ccc;
-        cursor: crosshair;
-        border-radius: 0.5rem;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
+    .form-step { display: none; animation: fadeIn 0.5s; }
+    .form-step.active { display: block; }
+    .progress-bar-container { position: relative; display: flex; justify-content: space-between; counter-reset: step; margin-bottom: 3rem; }
+    .progress-bar-container::before, .progress-line { content: ""; position: absolute; top: 50%; transform: translateY(-50%); height: 4px; width: 100%; background-color: #e0e0e0; z-index: -1; }
+    .progress-line { background-color: #0d6efd; /* Bootstrap Primary Color */ width: 0%; transition: 0.3s; }
+    .progress-step { width: 2.5rem; height: 2.5rem; background-color: #e0e0e0; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: white; transition: background-color 0.3s; position: relative; z-index: 1; }
+    .progress-step::before { counter-increment: step; content: counter(step); }
+    .progress-step::after { content: attr(data-title); position: absolute; top: calc(100% + 0.5rem); font-size: 0.8rem; color: #6c757d; width: 120px; text-align: center; }
+    .progress-step.active { background-color: #0d6efd; }
+    #signature-pad { border: 2px dashed #ccc; cursor: crosshair; border-radius: 0.5rem; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 
 <div class="container my-5">
@@ -175,12 +117,45 @@ require_once __DIR__ . '/../layouts/header_public.php';
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    const regForm = document.getElementById('regForm');
     const nextBtns = document.querySelectorAll(".next-btn");
     const prevBtns = document.querySelectorAll(".prev-btn");
     const formSteps = document.querySelectorAll(".form-step");
     const progressSteps = document.querySelectorAll(".progress-step");
     
     let formStepsNum = 0;
+
+    // **PENAMBAHAN:** Fungsi untuk menyimpan data ke localStorage
+    function saveData() {
+        const formData = new FormData(regForm);
+        const data = {};
+        for (let [key, value] of formData.entries()) {
+            // Kita tidak menyimpan file atau password di localStorage
+            if (key !== 'password' && key !== 'file_ktp' && key !== 'file_kk' && key !== 'foto_profil') {
+                data[key] = value;
+            }
+        }
+        localStorage.setItem('klinikFormData', JSON.stringify(data));
+    }
+
+    // **PENAMBAHAN:** Fungsi untuk memuat data dari localStorage
+    function loadData() {
+        const savedData = localStorage.getItem('klinikFormData');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            for (const key in data) {
+                if (regForm.elements[key]) {
+                    regForm.elements[key].value = data[key];
+                }
+            }
+        }
+    }
+
+    // Tambahkan event listener untuk menyimpan data setiap kali ada input
+    regForm.addEventListener('input', saveData);
+
+    // Panggil loadData saat halaman pertama kali dimuat
+    loadData();
 
     nextBtns.forEach((btn) => {
         btn.addEventListener("click", (e) => {
@@ -231,29 +206,19 @@ document.addEventListener("DOMContentLoaded", function() {
         return isValid;
     }
 
-    // Logika untuk menampilkan input nomor BPJS
-    const statusBpjsSelect = document.getElementById('status_bpjs');
-    const nomorBpjsGroup = document.getElementById('nomor-bpjs-group');
-    statusBpjsSelect.addEventListener('change', function() {
-        if (this.value === 'Tidak Ada') {
-            nomorBpjsGroup.style.display = 'none';
-            nomorBpjsGroup.querySelector('input').required = false;
-        } else {
-            nomorBpjsGroup.style.display = 'block';
-            nomorBpjsGroup.querySelector('input').required = true;
-        }
-    });
-
     // Logika untuk Tanda Tangan Digital
     const canvas = document.getElementById('signature-pad');
     const signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(248, 249, 250)' });
     document.getElementById('clear-signature').addEventListener('click', () => signaturePad.clear());
-    document.getElementById('regForm').addEventListener('submit', function(event) {
+    
+    regForm.addEventListener('submit', function(event) {
         if (signaturePad.isEmpty()) {
             alert("Harap berikan tanda tangan Anda.");
             event.preventDefault(); // Mencegah form disubmit
         } else {
             document.getElementById('tanda_tangan_data').value = signaturePad.toDataURL();
+            // **PENAMBAHAN:** Hapus data dari localStorage setelah submit berhasil
+            localStorage.removeItem('klinikFormData');
         }
     });
 });
