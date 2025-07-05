@@ -221,7 +221,8 @@ class User {
                     status_bpjs = ?,
                     nomor_bpjs = ?,
                     riwayat_penyakit = ?,
-                    riwayat_alergi = ?
+                    riwayat_alergi = ?,
+                    foto_profil = ? 
                   WHERE id_pasien = ?";
                   
         $stmt = $this->conn->prepare($query);
@@ -230,10 +231,9 @@ class User {
             return false;
         }
         
-        // Bind parameter (s = string, i = integer)
-        // Jumlah 's' harus cocok dengan jumlah '?' di query (16 's' dan 1 'i')
+        // [DIPERBARUI] Menambahkan 's' untuk foto_profil, total menjadi 17 's' dan 1 'i'
         $stmt->bind_param(
-            "ssssssssssssssssi",
+            "sssssssssssssssssi",
             $data['nama_lengkap'],
             $data['tempat_lahir'],
             $data['tanggal_lahir'],
@@ -250,6 +250,7 @@ class User {
             $data['nomor_bpjs'],
             $data['riwayat_penyakit'],
             $data['riwayat_alergi'],
+            $data['foto_profil'],
             $data['id_pasien']
         );
         
