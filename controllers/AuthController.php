@@ -18,35 +18,30 @@ class AuthController {
     }
 
     /**
-     * Memproses data dari form registrasi dengan validasi yang lebih baik.
+     * Memproses data dari form registrasi.
      */
     public function processRegister() {
         $userModel = new User();
         
-        // Ambil data dari form
         $email = $_POST['email'] ?? '';
         $telp = $_POST['nomor_telepon'] ?? '';
         $password = $_POST['password'] ?? '';
 
-        // Validasi dasar
         if (empty($email) || empty($password)) {
             header("Location: ?url=auth/register&error=Email dan password tidak boleh kosong.");
             exit;
         }
 
-        // Validasi #1: Cek apakah email sudah digunakan
+        // Cek apakah email atau nomor telepon sudah ada
         if ($userModel->emailExists($email)) {
-            header("Location: ?url=auth/register&error=Email ini sudah digunakan. Silakan gunakan email lain.");
+            header("Location: ?url=auth/register&error=Email ini sudah digunakan.");
             exit;
         }
-
-        // Validasi #2: Cek apakah nomor telepon sudah digunakan
         if ($userModel->phoneExists($telp)) {
             header("Location: ?url=auth/register&error=Nomor telepon ini sudah digunakan.");
             exit;
         }
 
-        // Jika semua validasi lolos, lanjutkan registrasi
         $data = [
             'email' => $email,
             'nomor_telepon' => $telp,
@@ -98,7 +93,9 @@ class AuthController {
             session_start();
         }
         session_destroy();
-        header("Location: ?url=auth/login");
+        
+        // **PERBAIKAN:** Mengarahkan ke halaman home setelah logout
+        header("Location: ?url=home");
         exit;
     }
 }
