@@ -5,62 +5,48 @@ class Notifikasi {
     private $conn;
 
     public function __construct() {
-        $db = new Database();
-        $this->conn = $db->connect();
+        $database = new Database();
+        $this->conn = $database->connect();
     }
 
     /**
-     * Mengambil semua notifikasi untuk pengguna tertentu.
-     * Dibuat kompatibel dengan server yang tidak memiliki mysqlnd.
-     * @param int $id_pengguna ID dari pengguna yang sedang login.
-     * @return array Daftar notifikasi.
+     * Mengambil notifikasi yang belum dibaca untuk pengguna tertentu.
+     * @param int $id_pengguna ID pengguna
+     * @return array Daftar notifikasi
      */
-    public function getNotifikasiByPenggunaId($id_pengguna) {
-        $query = "SELECT id_notifikasi, id_pengguna, judul, pesan, link, sudah_dibaca, tanggal_dibuat FROM Notifikasi WHERE id_pengguna = ? ORDER BY tanggal_dibuat DESC";
+    public function getUnreadByUserId($id_pengguna) {
+        $query = "SELECT * FROM notifikasi WHERE id_pengguna = ? AND is_read = 0 ORDER BY created_at DESC LIMIT 5";
+        
         $stmt = $this->conn->prepare($query);
-        if (!$stmt) {
-            return [];
-        }
+        if ($stmt === false) return [];
+
         $stmt->bind_param("i", $id_pengguna);
         $stmt->execute();
-        
-        // **PERBAIKAN:** Menggunakan bind_result sebagai pengganti get_result()
-        $stmt->bind_result($id_notifikasi, $id_pengguna_db, $judul, $pesan, $link, $sudah_dibaca, $tanggal_dibuat);
-        
+        $result = $stmt->get_result();
+
         $notifikasi = [];
-        // Ambil data baris per baris
-        while ($stmt->fetch()) {
-            // Buat array secara manual
-            $notifikasi[] = [
-                'id_notifikasi' => $id_notifikasi,
-                'id_pengguna'   => $id_pengguna_db,
-                'judul'         => $judul,
-                'pesan'         => $pesan,
-                'link'          => $link,
-                'sudah_dibaca'  => $sudah_dibaca,
-                'tanggal_dibuat'=> $tanggal_dibuat
-            ];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $notifikasi[] = $row;
+            }
         }
-        $stmt->close();
         return $notifikasi;
     }
 
     /**
-     * Menghitung jumlah notifikasi yang belum dibaca.
-     * @param int $id_pengguna ID dari pengguna.
-     * @return int Jumlah notifikasi belum dibaca.
+     * Membuat notifikasi baru.
+     * @param int $id_pengguna ID pengguna penerima
+     * @param string $pesan Isi pesan notifikasi
+     * @param string|null $link URL tujuan saat notifikasi diklik
+     * @return bool True jika berhasil, false jika gagal
      */
-    public function getUnreadCount($id_pengguna) {
-        $query = "SELECT COUNT(id_notifikasi) as count FROM Notifikasi WHERE id_pengguna = ? AND sudah_dibaca = FALSE";
+    public function create($id_pengguna, $pesan, $link = null) {
+        $query = "INSERT INTO notifikasi (id_pengguna, pesan, link) VALUES (?, ?, ?)";
+        
         $stmt = $this->conn->prepare($query);
-        if (!$stmt) {
-            return 0;
-        }
-        $stmt->bind_param("i", $id_pengguna);
-        $stmt->execute();
-        $stmt->bind_result($count);
-        $stmt->fetch();
-        $stmt->close();
-        return $count;
+        if ($stmt === false) return false;
+
+        $stmt->bind_param("iss", $id_pengguna, $pesan, $link);
+        return $stmt->execute();
     }
 }
