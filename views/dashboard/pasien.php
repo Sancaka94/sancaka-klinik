@@ -1,161 +1,96 @@
 <?php
-// =================================================================
-// BAGIAN 1: LOGIKA PHP & PERSIAPAN DATA
-// Semua logika PHP diletakkan di bagian paling atas agar bersih.
-// =================================================================
-
-// Memulai session jika belum ada
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Memeriksa otentikasi dan otorisasi pengguna.
-// Pastikan pengguna sudah login dan perannya adalah pasien (id_peran = 4).
-if (!isset($_SESSION['user']) || $_SESSION['user']['id_peran'] != 4) {
-    // Redirect ke halaman login jika tidak memenuhi syarat
-    header('Location: ?url=auth/login&error=Anda harus login sebagai pasien.');
-    exit;
-}
-
-// Menyiapkan variabel yang akan digunakan di HTML
-$user = $_SESSION['user'];
-$default_avatar = 'https://placehold.co/100x100/E2E8F0/4A5568?text=Profil';
-
-// Menentukan path foto profil, menggunakan default jika tidak ada.
-// htmlspecialchars() digunakan untuk keamanan (mencegah XSS).
-$foto_profil_path = (!empty($user['foto_profil'])) 
-    ? 'uploads/profiles/' . htmlspecialchars($user['foto_profil']) 
-    : $default_avatar;
-
-// Nama lengkap untuk ditampilkan, dengan fallback ke username jika nama lengkap kosong.
-$display_name = htmlspecialchars($user['nama_lengkap'] ?? $user['username']);
+// File: views/dashboard/pasien.php
 
 // =================================================================
-// BAGIAN 2: MEMANGGIL HEADER HTML
-// Ini akan mencakup <!DOCTYPE html>, <html>, <head>, dan awal <body>
+// BAGIAN 1: MEMANGGIL HEADER
+// Header sudah berisi semua logika session dan tag <head>
 // =================================================================
 require_once __DIR__ . '/../layouts/header.php';
+// Variabel $display_name sudah disiapkan di dalam header.php
 ?>
 
 <!-- 
 =================================================================
-BAGIAN 3: KONTEN UTAMA HALAMAN (HTML & Tailwind CSS)
-Struktur HTML sekarang lebih rapi dan valid.
+BAGIAN 2: KONTEN UTAMA HALAMAN (Bootstrap 5)
+Struktur HTML telah diubah untuk menggunakan kelas-kelas Bootstrap.
 =================================================================
 -->
-<div class="min-h-screen flex flex-col bg-gray-100">
-    <!-- Header Navigasi -->
-    <nav class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <a href="?url=dashboard/pasien" class="flex items-center space-x-2">
-                    <svg class="h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.5v3m0 9v3m4.5-7.5h3m-15 0h3" /></svg>
-                    <div class="flex-shrink-0 text-2xl font-bold text-indigo-600">Klinik Sehat</div>
-                </a>
-                <div class="flex items-center space-x-4">
-                    <a href="?url=notifikasi/index" class="relative text-gray-600 hover:text-indigo-600 p-2 rounded-full">
-                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                        <span id="notification-badge" class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white hidden"></span>
-                    </a>
-                    <div class="relative">
-                        <button id="profile-menu-button" class="flex text-sm bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <img class="h-8 w-8 rounded-full object-cover" src="<?php echo $foto_profil_path; ?>" alt="Foto Profil" onerror="this.onerror=null;this.src='<?php echo $default_avatar; ?>';">
-                        </button>
-                        <div id="profile-menu" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu">
-                            <div class="px-4 py-2 border-b">
-                                <p class="text-sm text-gray-700">Masuk sebagai</p>
-                                <p class="text-sm font-medium text-gray-900 truncate"><?php echo $display_name; ?></p>
-                            </div>
-                            <a href="?url=profile/pengaturan" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                                <svg class="h-5 w-5 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                Pengaturan Profil
-                            </a>
-                            <a href="?url=auth/logout" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                                <svg class="h-5 w-5 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                                Logout
-                            </a>
-                        </div>
-                    </div>
-                </div>
+<div class="mb-4">
+    <h1 class="h3 mb-1 text-dark">Selamat Datang, <?php echo $display_name; ?>!</h1>
+    <p class="text-muted">Ini adalah pusat informasi kesehatan Anda.</p>
+</div>
+
+<!-- Kartu Informasi Cepat -->
+<div class="row g-4 mb-4">
+    <!-- Kartu Janji Temu Berikutnya -->
+    <div class="col-lg-4 col-md-6">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body" id="janji-berikutnya-card">
+                <!-- Konten diisi oleh JavaScript -->
+                <h5 class="card-title">Janji Temu Berikutnya</h5>
+                <p class="card-text text-muted">Memuat data...</p>
             </div>
         </div>
-    </nav>
-
-    <!-- Konten Utama -->
-    <main class="flex-grow">
-        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div class="mb-8">
-                <!-- PERBAIKAN: Hanya ada satu pesan selamat datang sekarang -->
-                <h1 class="text-3xl font-bold text-gray-800">Selamat Datang, <?php echo $display_name; ?>!</h1>
-                <p class="text-gray-600 mt-1">Ini adalah pusat informasi kesehatan Anda.</p>
-            </div>
-
-            <!-- Kartu Informasi Cepat -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div id="janji-berikutnya-card" class="bg-white rounded-lg shadow p-6"></div>
-                <div id="rekam-medis-terakhir-card" class="bg-white rounded-lg shadow p-6"></div>
-                <a href="?url=janjitemu/buat" class="bg-indigo-600 text-white rounded-lg shadow p-6 flex flex-col justify-center items-center hover:bg-indigo-700 transition">
-                    <svg class="h-12 w-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                    <h3 class="mt-2 text-lg font-medium">Buat Janji Temu Baru</h3>
-                </a>
-            </div>
-
-            <!-- Tabel Riwayat -->
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="p-6 border-b border-gray-200"><h2 class="text-xl font-semibold text-gray-800">Riwayat dan Status Antrian</h2></div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dokter</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Antrian</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="riwayat-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- Data akan diisi oleh JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
+    </div>
+    <!-- Kartu Rekam Medis Terakhir -->
+    <div class="col-lg-4 col-md-6">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body" id="rekam-medis-terakhir-card">
+                <!-- Konten diisi oleh JavaScript -->
+                <h5 class="card-title">Rekam Medis Terakhir</h5>
+                <p class="card-text text-muted">Memuat data...</p>
             </div>
         </div>
-    </main>
+    </div>
+    <!-- Kartu Buat Janji Temu Baru -->
+    <div class="col-lg-4 col-md-12">
+        <a href="?url=janjitemu/buat" class="card h-100 bg-primary text-white shadow-sm text-decoration-none d-flex flex-column justify-content-center align-items-center">
+            <div class="card-body text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-plus-circle-fill mb-2" viewBox="0 0 16 16">
+                  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                </svg>
+                <h5 class="card-title mt-2">Buat Janji Temu Baru</h5>
+            </div>
+        </a>
+    </div>
+</div>
 
-    <!-- Footer -->
-    <footer class="bg-white mt-auto">
-        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
-            &copy; <?php echo date('Y'); ?> Klinik Sehat.
-        </div>
-    </footer>
+<!-- Tabel Riwayat -->
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h2 class="h5 mb-0">Riwayat dan Status Antrian</h2>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Tanggal</th>
+                    <th scope="col">Dokter</th>
+                    <th scope="col">No. Antrian</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="riwayat-table-body">
+                <!-- Data akan diisi oleh JavaScript -->
+                <tr><td colspan="5" class="text-center p-4 text-muted">Memuat riwayat...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- 
 =================================================================
-BAGIAN 4: JAVASCRIPT
-Diletakkan sebelum penutup </body> untuk performa loading yang lebih baik.
+BAGIAN 3: JAVASCRIPT
+Diletakkan di sini atau di footer.php.
 =================================================================
 -->
 <script>
-    // JavaScript untuk dropdown profil
-    const profileMenuButton = document.getElementById('profile-menu-button');
-    const profileMenu = document.getElementById('profile-menu');
-    
-    // Pastikan elemen ada sebelum menambahkan event listener
-    if (profileMenuButton && profileMenu) {
-        profileMenuButton.addEventListener('click', () => profileMenu.classList.toggle('hidden'));
-        window.addEventListener('click', (e) => {
-            if (!profileMenuButton.contains(e.target) && !profileMenu.contains(e.target)) {
-                profileMenu.classList.add('hidden');
-            }
-        });
-    }
-
-    // JavaScript untuk Realtime Update Dashboard
+    // Elemen-elemen DOM
     const janjiCard = document.getElementById('janji-berikutnya-card');
     const rekamMedisCard = document.getElementById('rekam-medis-terakhir-card');
     const riwayatTableBody = document.getElementById('riwayat-table-body');
+    // Badge notifikasi ada di header, jadi tidak perlu dideklarasikan ulang di sini.
     const notificationBadge = document.getElementById('notification-badge');
 
     function formatDate(dateString) {
@@ -171,21 +106,20 @@ Diletakkan sebelum penutup </body> untuk performa loading yang lebih baik.
                 console.error('Gagal mengambil data dari API, status:', response.status);
                 return;
             }
-
             const data = await response.json();
 
             // 1. Update Kartu Janji Temu Berikutnya
             if (janjiCard) {
                 if (data.janji_berikutnya) {
                     janjiCard.innerHTML = `
-                        <h3 class="text-lg font-medium text-gray-900">Janji Temu Berikutnya</h3>
-                        <p class="text-2xl font-semibold text-indigo-600 mt-2">${data.janji_berikutnya.dokter}</p>
-                        <p class="text-sm text-gray-500">${formatDate(data.janji_berikutnya.tanggal_booking)} - Antrian ${data.janji_berikutnya.nomor_antrian}</p>
+                        <h5 class="card-title">Janji Temu Berikutnya</h5>
+                        <h4 class="card-subtitle mb-2 text-primary">${data.janji_berikutnya.dokter}</h4>
+                        <p class="card-text text-muted">${formatDate(data.janji_berikutnya.tanggal_booking)} - Antrian ${data.janji_berikutnya.nomor_antrian}</p>
                     `;
                 } else {
                     janjiCard.innerHTML = `
-                        <h3 class="text-lg font-medium text-gray-900">Janji Temu Berikutnya</h3>
-                        <p class="text-gray-500 mt-2">Tidak ada janji temu yang direncanakan.</p>
+                        <h5 class="card-title">Janji Temu Berikutnya</h5>
+                        <p class="card-text text-muted mt-3">Tidak ada janji temu yang direncanakan.</p>
                     `;
                 }
             }
@@ -194,14 +128,14 @@ Diletakkan sebelum penutup </body> untuk performa loading yang lebih baik.
             if (rekamMedisCard) {
                 if (data.rekam_medis_terakhir) {
                     rekamMedisCard.innerHTML = `
-                        <h3 class="text-lg font-medium text-gray-900">Rekam Medis Terakhir</h3>
-                        <p class="text-2xl font-semibold text-green-600 mt-2">Pemeriksaan Selesai</p>
-                        <p class="text-sm text-gray-500">${formatDate(data.rekam_medis_terakhir.tanggal_booking)} oleh ${data.rekam_medis_terakhir.dokter}</p>
+                        <h5 class="card-title">Rekam Medis Terakhir</h5>
+                        <h4 class="card-subtitle mb-2 text-success">Pemeriksaan Selesai</h4>
+                        <p class="card-text text-muted">${formatDate(data.rekam_medis_terakhir.tanggal_booking)} oleh ${data.rekam_medis_terakhir.dokter}</p>
                     `;
                 } else {
                     rekamMedisCard.innerHTML = `
-                        <h3 class="text-lg font-medium text-gray-900">Rekam Medis Terakhir</h3>
-                        <p class="text-gray-500 mt-2">Belum ada rekam medis.</p>
+                        <h5 class="card-title">Rekam Medis Terakhir</h5>
+                        <p class="card-text text-muted mt-3">Belum ada rekam medis.</p>
                     `;
                 }
             }
@@ -211,39 +145,37 @@ Diletakkan sebelum penutup </body> untuk performa loading yang lebih baik.
                 riwayatTableBody.innerHTML = '';
                 if (data.riwayat_janji_temu && data.riwayat_janji_temu.length > 0) {
                     data.riwayat_janji_temu.forEach(janji => {
-                        let statusColor = 'bg-gray-100 text-gray-800';
-                        if (janji.status === 'Selesai') statusColor = 'bg-green-100 text-green-800';
-                        if (janji.status === 'Direncanakan') statusColor = 'bg-blue-100 text-blue-800';
-                        if (janji.status === 'Batal') statusColor = 'bg-red-100 text-red-800';
+                        let statusColor = 'bg-light text-dark';
+                        if (janji.status === 'Selesai') statusColor = 'bg-success text-white';
+                        if (janji.status === 'Direncanakan') statusColor = 'bg-primary text-white';
+                        if (janji.status === 'Batal') statusColor = 'bg-danger text-white';
                         
                         const aksiHtml = janji.rekam_medis_tersedia
-                            ? `<a href="?url=rekammedis/detail&id=${janji.id}" class="text-indigo-600 hover:text-indigo-900">Lihat Rekam Medis</a>`
-                            : `<span class="text-gray-400">-</span>`;
+                            ? `<a href="?url=rekammedis/detail&id=${janji.id}" class="btn btn-sm btn-outline-primary">Lihat Detail</a>`
+                            : `<span class="text-muted">-</span>`;
 
                         const row = `
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(janji.tanggal_booking)}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${janji.dokter}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">${janji.nomor_antrian || '-'}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">${janji.status}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${aksiHtml}</td>
+                                <td>${formatDate(janji.tanggal_booking)}</td>
+                                <td class="text-muted">${janji.dokter}</td>
+                                <td><span class="fw-bold">${janji.nomor_antrian || '-'}</span></td>
+                                <td><span class="badge rounded-pill ${statusColor}">${janji.status}</span></td>
+                                <td>${aksiHtml}</td>
                             </tr>
                         `;
                         riwayatTableBody.innerHTML += row;
                     });
                 } else {
-                    riwayatTableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Anda belum memiliki riwayat janji temu.</td></tr>`;
+                    riwayatTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Anda belum memiliki riwayat janji temu.</td></tr>`;
                 }
             }
 
             // 4. Update Badge Notifikasi
             if (notificationBadge) {
                 if (data.unread_notifications > 0) {
-                    notificationBadge.classList.remove('hidden');
+                    notificationBadge.classList.remove('visually-hidden');
                 } else {
-                    notificationBadge.classList.add('hidden');
+                    notificationBadge.classList.add('visually-hidden');
                 }
             }
 
@@ -255,18 +187,13 @@ Diletakkan sebelum penutup </body> untuk performa loading yang lebih baik.
     // Panggil fungsi sekali saat halaman dimuat
     document.addEventListener('DOMContentLoaded', updateDashboard);
     
-    // **PERBAIKAN KINERJA:**
-    // Mengubah interval menjadi 30 detik (30000 milidetik).
-    // Memanggil API setiap 1 detik akan sangat membebani server.
-    // Sesuaikan angka ini dengan kebutuhan Anda. 30 detik adalah awal yang baik.
+    // Mengatur interval update menjadi 30 detik
     setInterval(updateDashboard, 30000);
-
 </script>
 
 <?php
 // =================================================================
-// BAGIAN 5: MEMANGGIL FOOTER
-// Ini akan mencakup penutup </body> dan </html>
+// BAGIAN 4: MEMANGGIL FOOTER
 // =================================================================
 require_once __DIR__ . '/../layouts/footer.php';
 ?>
