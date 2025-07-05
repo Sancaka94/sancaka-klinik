@@ -22,8 +22,29 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // 4. Logika Router Utama
-// **PERBAIKAN:** Halaman default sekarang adalah 'home' untuk pengunjung baru
+// Halaman default adalah 'home' untuk pengunjung baru
 $url = $_GET['url'] ?? 'home'; 
+
+// **PENYEMPURNAAN:** Jika pengguna sudah login dan mengakses halaman home, arahkan ke dashboard
+if ($url === 'home' && isset($_SESSION['user'])) {
+    // Arahkan ke dashboard yang sesuai dengan peran pengguna
+    // Ini mencegah pengguna yang sudah login melihat halaman beranda lagi.
+    switch ($_SESSION['user']['id_peran']) {
+        case 1:
+            header('Location: ?url=dashboard/superadmin');
+            exit;
+        case 2:
+            header('Location: ?url=dashboard/admin');
+            exit;
+        case 3:
+            header('Location: ?url=dashboard/dokter');
+            exit;
+        case 4:
+            header('Location: ?url=dashboard/pasien');
+            exit;
+    }
+}
+
 $urlParts = explode('/', rtrim($url, '/'));
 
 $controllerName = ucfirst($urlParts[0]) . 'Controller';
