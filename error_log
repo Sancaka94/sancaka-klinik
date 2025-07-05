@@ -1,0 +1,144 @@
+[04-Jul-2025 12:42:18 UTC] PHP Warning:  require_once(models/Resep.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:42:18 UTC] PHP Fatal error:  require_once(): Failed opening required 'models/Resep.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:42:21 UTC] PHP Warning:  require_once(models/Resep.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:42:21 UTC] PHP Fatal error:  require_once(): Failed opening required 'models/Resep.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:43:08 UTC] PHP Warning:  require_once(models/Resep.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:43:08 UTC] PHP Fatal error:  require_once(): Failed opening required 'models/Resep.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:43:32 UTC] PHP Warning:  require_once(models/Resep.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:43:32 UTC] PHP Fatal error:  require_once(): Failed opening required 'models/Resep.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:45:40 UTC] PHP Warning:  require_once(models/Resep.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:45:40 UTC] PHP Fatal error:  require_once(): Failed opening required 'models/Resep.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:45:42 UTC] PHP Warning:  require_once(models/Resep.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:45:42 UTC] PHP Fatal error:  require_once(): Failed opening required 'models/Resep.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:45:43 UTC] PHP Warning:  require_once(models/Resep.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:45:43 UTC] PHP Fatal error:  require_once(): Failed opening required 'models/Resep.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/ResepController.php on line 2
+[04-Jul-2025 12:46:50 UTC] PHP Fatal error:  Cannot declare class ResepController, because the name is already in use in /home/sancakab/public_html/apps/klinik-app/models/Resep.php on line 5
+[04-Jul-2025 12:59:25 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'klinik@sancaka.biz.id'@'srv1.saunghosting.com' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:01:22 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'klinik@sancaka.biz.id'@'srv1.saunghosting.com' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:01:25 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'klinik@sancaka.biz.id'@'srv1.saunghosting.com' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:03:10 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'sancakab_klinik'@'localhost' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:03:11 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'sancakab_klinik'@'localhost' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:03:12 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'sancakab_klinik'@'localhost' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:03:14 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'sancakab_klinik'@'localhost' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:03:40 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'sancakab_klinik'@'localhost' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:03:41 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'sancakab_klinik'@'localhost' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:04:14 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'klinik@sancaka.biz.id'@'localhost' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:04:15 UTC] PHP Warning:  mysqli::__construct(): (28000/1045): Access denied for user 'klinik@sancaka.biz.id'@'localhost' (using password: YES) in /home/sancakab/public_html/apps/klinik-app/index.php on line 35
+[04-Jul-2025 13:33:44 UTC] PHP Warning:  require(views/login.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:33:44 UTC] PHP Fatal error:  require(): Failed opening required 'views/login.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:36:56 UTC] PHP Warning:  require(views/login.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:36:56 UTC] PHP Fatal error:  require(): Failed opening required 'views/login.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:36:57 UTC] PHP Warning:  require(views/login.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:36:57 UTC] PHP Fatal error:  require(): Failed opening required 'views/login.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:37:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in /home/sancakab/public_html/apps/klinik-app/models/User.php:12
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php(12): User->login('sancaka', 'Salafyyin***94')
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(31): AuthController->authenticate()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/User.php on line 12
+[04-Jul-2025 13:40:26 UTC] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in /home/sancakab/public_html/apps/klinik-app/models/User.php:12
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php(12): User->login('sancaka', 'Salafyyin***94')
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(31): AuthController->authenticate()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/User.php on line 12
+[04-Jul-2025 13:40:30 UTC] PHP Warning:  require(views/login.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:40:30 UTC] PHP Fatal error:  require(): Failed opening required 'views/login.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:40:31 UTC] PHP Warning:  require(views/login.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:40:31 UTC] PHP Fatal error:  require(): Failed opening required 'views/login.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 4
+[04-Jul-2025 13:57:10 UTC] PHP Fatal error:  Cannot declare class AuthController, because the name is already in use in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 50
+[04-Jul-2025 14:08:08 UTC] PHP Fatal error:  Uncaught Error: Class 'User' not found in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php:48
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/index.php(31): AuthController->processRegister()
+#1 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 48
+[04-Jul-2025 14:09:33 UTC] PHP Fatal error:  Cannot redeclare AuthController::processRegister() in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 73
+[04-Jul-2025 14:12:53 UTC] PHP Fatal error:  Cannot redeclare AuthController::processRegister() in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 73
+[04-Jul-2025 14:15:46 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 42
+[04-Jul-2025 14:17:21 UTC] PHP Fatal error:  Uncaught Error: Class 'User' not found in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php:11
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/index.php(31): AuthController->processRegister()
+#1 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 11
+[04-Jul-2025 14:20:04 UTC] PHP Fatal error:  Cannot declare class Database, because the name is already in use in /home/sancakab/public_html/apps/klinik-app/config/database.php on line 2
+[04-Jul-2025 14:20:18 UTC] PHP Fatal error:  Cannot declare class Database, because the name is already in use in /home/sancakab/public_html/apps/klinik-app/config/database.php on line 2
+[04-Jul-2025 14:30:56 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method mysqli_stmt::get_result() in /home/sancakab/public_html/apps/klinik-app/models/User.php:40
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php(44): User->login('tokosancaka@gma...', 'Salafyyin***94')
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(16): AuthController->authenticate()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/User.php on line 40
+[04-Jul-2025 14:34:20 UTC] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in /home/sancakab/public_html/apps/klinik-app/models/User.php:42
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php(44): User->login('tokosancaka@gma...', 'Salafyyin***94')
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(16): AuthController->authenticate()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/User.php on line 42
+[04-Jul-2025 14:38:41 UTC] PHP Notice:  Undefined index: id_peran in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 50
+[04-Jul-2025 14:47:52 UTC] PHP Notice:  Undefined index: id_peran in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 50
+[04-Jul-2025 15:27:55 UTC] PHP Fatal error:  Uncaught Error: Call to a member function execute() on bool in /home/sancakab/public_html/apps/klinik-app/models/User.php:46
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php(44): User->login('tokosancaka@gma...', 'Salafyyin***94')
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(16): AuthController->authenticate()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/User.php on line 46
+[04-Jul-2025 15:27:58 UTC] PHP Fatal error:  Uncaught Error: Call to a member function execute() on bool in /home/sancakab/public_html/apps/klinik-app/models/User.php:46
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php(44): User->login('tokosancaka@gma...', 'Salafyyin***94')
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(16): AuthController->authenticate()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/User.php on line 46
+[04-Jul-2025 15:29:24 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method mysqli::errorInfo() in /home/sancakab/public_html/apps/klinik-app/models/User.php:50
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php(44): User->login('tokosancaka@gma...', 'Salafyyin***94')
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(16): AuthController->authenticate()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/User.php on line 50
+[04-Jul-2025 15:30:31 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method mysqli_stmt::get_result() in /home/sancakab/public_html/apps/klinik-app/models/User.php:59
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php(44): User->login('tokosancaka@gma...', 'Salafyyin***94')
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(16): AuthController->authenticate()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/User.php on line 59
+[04-Jul-2025 15:38:04 UTC] PHP Fatal error:  Cannot redeclare AuthController::register() in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 14
+[04-Jul-2025 15:38:09 UTC] PHP Fatal error:  Cannot redeclare AuthController::register() in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 14
+[04-Jul-2025 15:42:08 UTC] PHP Fatal error:  Cannot redeclare AuthController::login() in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 56
+[04-Jul-2025 15:57:29 UTC] PHP Warning:  require(/home/sancakab/public_html/apps/klinik-app/controllers/../views/dashboard/pasien.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php on line 19
+[04-Jul-2025 15:57:29 UTC] PHP Fatal error:  require(): Failed opening required '/home/sancakab/public_html/apps/klinik-app/controllers/../views/dashboard/pasien.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php on line 19
+[04-Jul-2025 16:02:44 UTC] PHP Warning:  require(/home/sancakab/public_html/apps/klinik-app/controllers/../views/dashboard/pasien.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php on line 19
+[04-Jul-2025 16:02:44 UTC] PHP Fatal error:  require(): Failed opening required '/home/sancakab/public_html/apps/klinik-app/controllers/../views/dashboard/pasien.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php on line 19
+[04-Jul-2025 16:02:48 UTC] PHP Warning:  require(/home/sancakab/public_html/apps/klinik-app/controllers/../views/dashboard/pasien.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php on line 19
+[04-Jul-2025 16:02:48 UTC] PHP Fatal error:  require(): Failed opening required '/home/sancakab/public_html/apps/klinik-app/controllers/../views/dashboard/pasien.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php on line 19
+[04-Jul-2025 16:11:21 UTC] PHP Warning:  require_once(/home/sancakab/public_html/apps/klinik-app/views/dashboard/../config/database.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/views/dashboard/pasien.php on line 2
+[04-Jul-2025 16:11:21 UTC] PHP Fatal error:  require_once(): Failed opening required '/home/sancakab/public_html/apps/klinik-app/views/dashboard/../config/database.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/views/dashboard/pasien.php on line 2
+[04-Jul-2025 16:14:04 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method Pasien::getPasienByPenggunaId() in /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php:25
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/index.php(16): DashboardController->pasien()
+#1 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php on line 25
+[04-Jul-2025 16:15:27 UTC] PHP Warning:  require_once(/home/sancakab/public_html/apps/klinik-app/views/dashboard/../config/database.php): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/views/dashboard/pasien.php on line 2
+[04-Jul-2025 16:15:27 UTC] PHP Fatal error:  require_once(): Failed opening required '/home/sancakab/public_html/apps/klinik-app/views/dashboard/../config/database.php' (include_path='.:/opt/alt/php74/usr/share/pear') in /home/sancakab/public_html/apps/klinik-app/views/dashboard/pasien.php on line 2
+[04-Jul-2025 16:30:59 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method User::emailExists() in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php:38
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/index.php(16): AuthController->processRegister()
+#1 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/controllers/AuthController.php on line 38
+[04-Jul-2025 16:32:52 UTC] Execute Pasien gagal: Field 'tanggal_lahir' doesn't have a default value
+[04-Jul-2025 16:48:19 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method mysqli_stmt::get_result() in /home/sancakab/public_html/apps/klinik-app/models/Pasien.php:17
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php(25): Pasien->getPasienByPenggunaId(15)
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(16): DashboardController->pasien()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/Pasien.php on line 17
+[04-Jul-2025 16:50:16 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method mysqli_stmt::get_result() in /home/sancakab/public_html/apps/klinik-app/models/Pasien.php:17
+Stack trace:
+#0 /home/sancakab/public_html/apps/klinik-app/controllers/DashboardController.php(25): Pasien->getPasienByPenggunaId(15)
+#1 /home/sancakab/public_html/apps/klinik-app/index.php(16): DashboardController->pasien()
+#2 {main}
+  thrown in /home/sancakab/public_html/apps/klinik-app/models/Pasien.php on line 17
+[04-Jul-2025 17:35:41 UTC] PHP Warning:  mkdir(): File exists in /home/sancakab/public_html/apps/klinik-app/index.php on line 11
+[04-Jul-2025 17:54:17 UTC] PHP Warning:  file_put_contents(/home/sancakab/public_html/apps/klinik-app/logs/app_errors.log): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/index.php on line 30
+[04-Jul-2025 17:59:57 UTC] PHP Warning:  file_put_contents(/home/sancakab/public_html/apps/klinik-app/logs/app_errors.log): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/index.php on line 30
+[04-Jul-2025 18:01:12 UTC] PHP Warning:  file_put_contents(/home/sancakab/public_html/apps/klinik-app/logs/app_errors.log): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/index.php on line 30
+[04-Jul-2025 18:02:29 UTC] PHP Warning:  file_put_contents(/home/sancakab/public_html/apps/klinik-app/logs/app_errors.log): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/index.php on line 30
+[04-Jul-2025 18:25:48 UTC] PHP Warning:  file_put_contents(/home/sancakab/public_html/apps/klinik-app/logs/app_errors.log): failed to open stream: No such file or directory in /home/sancakab/public_html/apps/klinik-app/index.php on line 30

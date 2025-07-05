@@ -1,0 +1,16 @@
+# ... (kode lainnya tetap sama)
+
+      # Langkah 2: Melakukan deployment menggunakan FTP Action
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          # Alamat server, diambil dari secret
+          server: ${{ secrets.FTP_SERVER }}
+          # Username FTP, diambil dari secret
+          username: ${{ secrets.FTP_USERNAME }}
+          # Password FTP, diambil dari secret
+          password: ${{ secrets.FTP_PASSWORD }}
+          
+          # === TAMBAHKAN BARIS INI ===
+          # Folder tujuan di server FTP Anda
+          server-dir: /public_html/apps
