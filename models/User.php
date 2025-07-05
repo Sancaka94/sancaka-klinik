@@ -167,4 +167,36 @@ class User {
         $stmt->store_result();
         return $stmt->num_rows > 0;
     }
+
+    /**
+     * [FUNGSI BARU] Mengambil semua data dari tabel 'pasien' dan 'pengguna'
+     * berdasarkan id_pengguna.
+     * @param int $id_pengguna ID pengguna yang sedang login.
+     * @return array|null Data profil gabungan jika ditemukan, atau null jika tidak.
+     */
+    public function getPatientProfileById($id_pengguna) {
+        // Query untuk menggabungkan (JOIN) tabel pengguna dan pasien
+        $query = "SELECT p.*, u.email, u.username 
+                  FROM pasien p 
+                  JOIN pengguna u ON p.id_pengguna = u.id_pengguna 
+                  WHERE p.id_pengguna = ?";
+
+        $stmt = $this->conn->prepare($query);
+        if ($stmt === false) {
+            $this->log_to_file("SQL PREPARE FAILED (getPatientProfileById): " . $this->conn->error);
+            return null;
+        }
+
+        $stmt->bind_param("i", $id_pengguna);
+        $stmt->execute();
+        
+        // Karena kita tidak menggunakan mysqlnd, kita harus mengambil hasilnya secara manual
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            // fetch_assoc() akan mengembalikan baris data sebagai array asosiatif
+            return $result->fetch_assoc();
+        }
+
+        return null;
+    }
 }
