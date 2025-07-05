@@ -3,7 +3,7 @@ require_once __DIR__ . '/../models/User.php';
 
 class AuthController {
 
-    // ... (method login, authenticate, logout tetap sama) ...
+    // ... (method login, register, authenticate, logout tetap sama) ...
     public function login() {
         require __DIR__ . '/../views/auth/login.php';
     }
@@ -39,27 +39,19 @@ class AuthController {
         header("Location: ?url=home");
         exit;
     }
-
-
-    /**
-     * Menampilkan halaman form registrasi.
-     */
     public function register() {
         require __DIR__ . '/../views/auth/register.php';
     }
-
-    /**
-     * **FUNGSI BARU:** Menampilkan halaman konfirmasi setelah registrasi berhasil.
-     */
     public function registrasi_berhasil() {
         require __DIR__ . '/../views/auth/registrasi_berhasil.php';
     }
+
 
     /**
      * Memproses semua data dari form registrasi multi-langkah.
      */
     public function processRegister() {
-        // Validasi dasar
+        // Validasi dasar bahwa request adalah POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header("Location: ?url=auth/register&error=Invalid request.");
             exit;
@@ -67,7 +59,7 @@ class AuthController {
 
         $userModel = new User();
         
-        // Mengumpulkan semua data dari $_POST dan $_FILES
+        // **LOGIKA LENGKAP:** Mengumpulkan semua data dari $_POST dan $_FILES
         $data = [
             // Step 1 & 5
             'email'             => $_POST['email'] ?? '',
@@ -105,16 +97,17 @@ class AuthController {
             header("Location: ?url=auth/register&error=Email ini sudah digunakan.");
             exit;
         }
-        if ($userModel->phoneExists($data['nomor_telepon'])) {
+        if (!empty($data['nomor_telepon']) && $userModel->phoneExists($data['nomor_telepon'])) {
             header("Location: ?url=auth/register&error=Nomor telepon ini sudah digunakan.");
             exit;
         }
 
         // Panggil fungsi register di model dengan data yang sudah lengkap
         if ($userModel->register($data)) {
-            // **PERBAIKAN:** Arahkan ke halaman konfirmasi sukses
+            // Jika berhasil, arahkan ke halaman konfirmasi sukses
             header("Location: ?url=auth/registrasi_berhasil");
         } else {
+            // Jika gagal, arahkan kembali ke form dengan pesan error
             header("Location: ?url=auth/register&error=Registrasi gagal karena kesalahan server.");
         }
         exit;
