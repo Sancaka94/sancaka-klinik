@@ -13,6 +13,8 @@ require_once __DIR__ . '/../layouts/header_public.php';
             <h1 class="display-5 fw-bold lh-1 mb-3">Layanan Kesehatan Modern untuk Pemulihan Anda</h1>
             <p class="lead">Selamat datang di Klinik Sancaka. Kami menyediakan pelayanan medis profesional dengan dokter berpengalaman dan fasilitas modern untuk Anda dan keluarga.</p>
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
+                <!-- Di bagian mana pun di halaman Anda -->
+                <a href="?url=auth/register_dokter" class="tombol-pendaftaran-dokter">Bergabung Sebagai Dokter</a>
                 <a href="?url=janjitemu/buat" type="button" class="btn btn-primary btn-lg px-4 me-md-2">Buat Janji Temu Sekarang</a>
                 <a href="?url=auth/register" type="button" class="btn btn-outline-secondary btn-lg px-4">Daftar Sebagai Pasien Baru</a>
             </div>
