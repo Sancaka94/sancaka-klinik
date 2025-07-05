@@ -1,83 +1,20 @@
 <?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-require_once __DIR__ . '/../models/Pasien.php';
+// Memuat model-model yang diperlukan
+require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/JanjiTemu.php';
-require_once __DIR__ . '/../models/Notifikasi.php'; // Memuat model notifikasi
+require_once __DIR__ . '/../models/Notifikasi.php'; // Model baru untuk notifikasi
 
 class DashboardController {
 
-    /**
-     * Menyiapkan dan menampilkan halaman dashboard pasien (pemuatan awal).
-     */
-    public function pasien() {
-        $this->checkRole(4);
-        
-        // Data awal yang dibutuhkan oleh view
-        $notifikasiModel = new Notifikasi();
-        $unread_notifications = $notifikasiModel->getUnreadCount($_SESSION['user']['id_pengguna']);
-        
-        // Memuat file view. Data janji temu akan dimuat oleh JavaScript.
-        require __DIR__ . '/../views/dashboard/pasien.php';
-    }
-
-    /**
-     * **ENDPOINT BARU:** Menyediakan data dashboard dalam format JSON untuk JavaScript.
-     */
-    public function api() {
-        $this->checkRole(4);
-        
-        // Siapkan model
-        $pasienModel = new Pasien();
-        $janjiTemuModel = new JanjiTemu();
-        $notifikasiModel = new Notifikasi();
-        
-        // Ambil data pasien
-        $pasien_data = $pasienModel->getPasienByPenggunaId($_SESSION['user']['id_pengguna']);
-        
-        $response_data = [
-            'riwayat_janji_temu' => [],
-            'janji_berikutnya' => null,
-            'rekam_medis_terakhir' => null,
-            'unread_notifications' => 0
-        ];
-
-        if ($pasien_data) {
-            // Ambil data janji temu dan notifikasi
-            $riwayat = $janjiTemuModel->getRiwayatByPasienId($pasien_data['id_pasien']);
-            $unread_count = $notifikasiModel->getUnreadCount($_SESSION['user']['id_pengguna']);
-            
-            $response_data['riwayat_janji_temu'] = $riwayat;
-            $response_data['unread_notifications'] = $unread_count;
-
-            // Proses data untuk menemukan janji berikutnya dan rekam medis terakhir
-            foreach (array_reverse($riwayat) as $janji) {
-                if ($janji['status'] == 'Direncanakan' && strtotime($janji['tanggal_booking']) >= time()) {
-                    $response_data['janji_berikutnya'] = $janji;
-                    break;
-                }
-            }
-            foreach ($riwayat as $janji) {
-                if ($janji['status'] == 'Selesai') {
-                    $response_data['rekam_medis_terakhir'] = $janji;
-                    break;
-                }
-            }
+    public function __construct() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
         }
-        
-        // Atur header sebagai JSON dan kirimkan data
-        header('Content-Type: application/json');
-        echo json_encode($response_data);
-        exit;
     }
 
-    // ... (fungsi dokter, admin, dll. tetap sama)
-    public function dokter() { $this->checkRole(3); require __DIR__ . '/../views/dashboard/dokter.php'; }
-    public function admin() { $this->checkRole(2); require __DIR__ . '/../views/dashboard/admin.php'; }
-    public function superadmin() { $this->checkRole(1); require __DIR__ . '/../views/dashboard/superadmin.php'; }
-
+    /**
+     * Memeriksa apakah pengguna memiliki peran yang sesuai.
+     */
     private function checkRole($requiredRoleId) {
         if (!isset($_SESSION['user'])) {
             header('Location: ?url=auth/login&error=Anda harus login terlebih dahulu.');
@@ -87,5 +24,88 @@ class DashboardController {
             header('Location: ?url=auth/login&error=Anda tidak memiliki akses ke halaman ini.');
             exit;
         }
+    }
+
+    /**
+     * Menampilkan halaman dasbor dokter (hanya kerangka).
+     */
+    public function dokter() {
+        $this->checkRole(3); // Asumsi id_peran 3 adalah Dokter
+        require __DIR__ . '/../views/dashboard/dokter.php';
+    }
+
+    /**
+     * [DIPERBARUI] Menyediakan data untuk dasbor dokter, termasuk notifikasi.
+     */
+    public function api_dokter() {
+        $this->checkRole(3);
+
+        $id_dokter = $_SESSION['user']['id_pengguna'];
+
+        $userModel = new User();
+        $janjiTemuModel = new JanjiTemu();
+        $notifikasiModel = new Notifikasi(); // Instance model notifikasi
+
+        // Mengambil semua data yang diperlukan
+        $info_dokter = $userModel->getPatientProfileById($id_dokter);
+        $janji_temu_hari_ini = $janjiTemuModel->getAppointmentsForDoctorToday($id_dokter);
+        $statistik = $janjiTemuModel->getAppointmentStatsForDoctorToday($id_dokter);
+        $notifikasi = $notifikasiModel->getUnreadByUserId($id_dokter); // Ambil notifikasi
+
+        // Menggabungkan semua data ke dalam satu array response
+        $response_data = [
+            'info_dokter' => $info_dokter,
+            'janji_temu_hari_ini' => $janji_temu_hari_ini,
+            'statistik' => $statistik,
+            'notifikasi' => $notifikasi // Tambahkan data notifikasi ke response
+        ];
+
+        header('Content-Type: application/json');
+        echo json_encode($response_data);
+        exit;
+    }
+
+    /**
+     * [FUNGSI BARU] Menampilkan halaman dasbor pasien (hanya kerangka).
+     */
+    public function pasien() {
+        $this->checkRole(4); // Asumsi id_peran 4 adalah Pasien
+        require __DIR__ . '/../views/dashboard/pasien.php';
+    }
+
+    /**
+     * [ENDPOINT API BARU] Menyediakan data untuk dasbor pasien dalam format JSON.
+     */
+    public function api_pasien() {
+        $this->checkRole(4);
+
+        $id_pengguna = $_SESSION['user']['id_pengguna'];
+
+        $userModel = new User();
+        $janjiTemuModel = new JanjiTemu();
+        $notifikasiModel = new Notifikasi();
+
+        // Mengambil data profil pasien
+        $info_pasien = $userModel->getPatientProfileById($id_pengguna);
+        $janji_berikutnya = null;
+        $riwayat_janji = [];
+
+        if ($info_pasien) {
+            $janji_berikutnya = $janjiTemuModel->getUpcomingAppointmentForPatient($info_pasien['id_pasien']);
+            $riwayat_janji = $janjiTemuModel->getHistoryForPatient($info_pasien['id_pasien']);
+        }
+        
+        $notifikasi = $notifikasiModel->getUnreadByUserId($id_pengguna);
+
+        $response_data = [
+            'info_pasien' => $info_pasien,
+            'janji_berikutnya' => $janji_berikutnya,
+            'riwayat_janji' => $riwayat_janji,
+            'notifikasi' => $notifikasi
+        ];
+
+        header('Content-Type: application/json');
+        echo json_encode($response_data);
+        exit;
     }
 }
