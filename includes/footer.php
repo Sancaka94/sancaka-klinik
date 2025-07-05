@@ -17,13 +17,13 @@
 <!-- JAVASCRIPT LIBRARIES -->
 <!-- ================================================================== -->
 
-<!-- Memuat file Bootstrap 5 JS Bundle dari folder lokal -->
-<!-- INI ADALAH BAGIAN TERPENTING untuk membuat dropdown dan komponen interaktif lainnya berfungsi -->
-<script src="js/bootstrap.bundle.min.js"></script>
+<!-- PERBAIKAN: Menggunakan path absolut dari root website -->
+<!-- Ini akan memastikan file selalu ditemukan -->
+<script src="/apps/klinik-app/js/bootstrap.bundle.min.js"></script>
 
 <!-- 
     Di sini Anda bisa menambahkan link ke file JavaScript kustom Anda jika ada.
-    Contoh: <script src="js/app.js"></script>
+    Contoh: <script src="/apps/klinik-app/js/app.js"></script>
 -->
 
 </body>
