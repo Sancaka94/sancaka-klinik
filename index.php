@@ -3,9 +3,8 @@
 
 // 1. Pengaturan Error Reporting yang Ketat
 error_reporting(E_ALL);
-_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
 ini_set('display_errors', 1); // Aktifkan untuk development, matikan (set ke 0) untuk production
+ini_set('display_startup_errors', 1);
 
 // 2. Custom Exception Handler (untuk menangkap error fatal dan mengarahkan ke halaman debug)
 set_exception_handler(function($exception) {
