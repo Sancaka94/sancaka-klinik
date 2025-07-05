@@ -89,8 +89,12 @@ class AuthController {
     }
 
     public function processRegister() {
-        
-        
+        // ==================================================================
+        // TES A: Apakah fungsi ini dipanggil?
+        // Jika Anda tidak melihat pesan ini, masalah ada di routing atau action form.
+        die("Tes A: Fungsi processRegister() berhasil dijalankan.");
+        // ==================================================================
+
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
@@ -104,6 +108,16 @@ class AuthController {
         $ktpFilename = $this->handleFileUpload($_FILES['file_ktp'] ?? null, 'uploads/ktp/');
         $kkFilename = $this->handleFileUpload($_FILES['file_kk'] ?? null, 'uploads/kk/');
         $profilePicFilename = $this->handleFileUpload($_FILES['foto_profil'] ?? null, 'uploads/profil/');
+        
+        // ==================================================================
+        // TES B: Apakah file berhasil di-upload?
+        // Hapus komentar di bawah ini setelah Tes A berhasil.
+        /*
+        echo "Hasil upload KTP: "; var_dump($ktpFilename);
+        echo "<br>Hasil upload KK: "; var_dump($kkFilename);
+        die("<br>Tes B: Proses upload file selesai.");
+        */
+        // ==================================================================
 
         if ($ktpFilename === null) {
             $ktpError = $_FILES['file_ktp']['error'] ?? UPLOAD_ERR_NO_FILE;
@@ -148,6 +162,16 @@ class AuthController {
             'file_kk'           => $kkFilename,
             'foto_profil'       => $profilePicFilename,
         ];
+        
+        // ==================================================================
+        // TES C: Apakah semua data dari form terkumpul dengan benar?
+        // Hapus komentar di bawah ini setelah Tes B berhasil.
+        /*
+        echo "<pre>";
+        var_dump($data);
+        die("</pre><br>Tes C: Data lengkap sebelum divalidasi.");
+        */
+        // ==================================================================
 
         if ($userModel->emailExists($data['email'])) {
             $_SESSION['registration_error'] = [
@@ -165,6 +189,14 @@ class AuthController {
             header("Location: ?url=auth/register");
             exit;
         }
+        
+        // ==================================================================
+        // TES D: Apakah kode sampai ke titik sebelum menyimpan ke database?
+        // Jika Tes C berhasil tapi ini tidak muncul, error ada di validasi email/telepon.
+        // Jika ini muncul dan registrasi tetap gagal, error ada di dalam fungsi $userModel->register().
+        // Hapus komentar di bawah ini setelah Tes C berhasil.
+        // die("Tes D: Validasi berhasil, siap menyimpan ke database.");
+        // ==================================================================
 
         if ($userModel->register($data)) {
             header("Location: ?url=auth/registrasi_berhasil");
@@ -178,4 +210,4 @@ class AuthController {
         exit;
     }
     
-} // <-- INI ADALAH KURUNG KURAWAL PENUTUP YANG HILANG. SEKARANG SUDAH ADA.
+}
