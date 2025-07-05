@@ -29,8 +29,8 @@ if ($is_logged_in) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klinik Sehat</title>
     
-    <!-- Memuat file Bootstrap 5 CSS dari folder lokal -->
-    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <!-- PERBAIKAN: Menggunakan path absolut dari root website -->
+    <link rel="stylesheet" href="/apps/klinik-app/css/bootstrap.min.css">
     
     <!-- Font Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
