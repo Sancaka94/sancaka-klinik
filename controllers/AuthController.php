@@ -4,24 +4,29 @@ require_once __DIR__ . '/../models/User.php';
 class AuthController {
 
     /**
-     * [BARU] Fungsi helper untuk mencetak log debug ke layar.
-     * @param string $step - Deskripsi langkah yang sedang di-debug.
-     * @param mixed|null $data - Data (array atau variabel) untuk ditampilkan.
+     * [BARU] Fungsi helper untuk mencatat log ke dalam file debug.log.
+     * @param string $message - Pesan log yang akan ditulis.
+     * @param mixed|null $data - Data (array atau variabel) untuk detail tambahan.
      */
-    private function debug_log($step, $data = null) {
-        echo "<div style='font-family: Consolas, monospace; border: 1px solid #007bff; padding: 10px; margin: 5px; background: #f0f8ff; border-radius: 5px;'>";
-        echo "<strong style='color: #007bff;'>LANGKAH: $step</strong><br>";
+    private function log_to_file($message, $data = null) {
+        // Tentukan path ke file log di direktori root aplikasi
+        $log_file = __DIR__ . '/../debug.log';
+        // Format waktu saat ini
+        $time = date('Y-m-d H:i:s');
+        // Format entri log
+        $log_entry = "[$time] $message";
+        
+        // Jika ada data tambahan, format sebagai string
         if ($data !== null) {
-            echo "<pre style='background: #e9ecef; padding: 10px; border-radius: 3px; white-space: pre-wrap; word-wrap: break-word; margin-top: 5px;'>";
-            print_r($data);
-            echo "</pre>";
+            // print_r dengan parameter kedua 'true' akan mengembalikan string, bukan mencetaknya
+            $log_entry .= ": " . print_r($data, true);
         }
-        echo "</div>";
-        // Memaksa server untuk mengirim output ke browser segera
-        if (ob_get_level() > 0) {
-            ob_flush();
-        }
-        flush();
+        
+        // Tambahkan baris baru di akhir entri
+        $log_entry .= PHP_EOL;
+        
+        // Tulis entri ke file log (FILE_APPEND agar tidak menimpa log lama)
+        file_put_contents($log_file, $log_entry, FILE_APPEND);
     }
 
     // Metode login, authenticate, logout, register, dan registrasi_berhasil tetap sama...
@@ -77,7 +82,7 @@ class AuthController {
     private function handleFileUpload($file, $uploadDir) {
         if ($file === null || $file['error'] !== UPLOAD_ERR_OK) {
             if (isset($file['error']) && $file['error'] !== UPLOAD_ERR_NO_FILE) {
-                error_log("File upload error code: " . $file['error']);
+                $this->log_to_file("File upload error code", $file['error']);
             }
             return null;
         }
@@ -85,13 +90,13 @@ class AuthController {
         $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
         if (!in_array($fileExtension, $allowedExtensions)) {
-            error_log("Invalid file type uploaded: " . $fileExtension);
+            $this->log_to_file("Invalid file type uploaded", $fileExtension);
             return null;
         }
 
         $maxFileSize = 5 * 1024 * 1024; // 5 MB
         if ($file['size'] > $maxFileSize) {
-            error_log("File size exceeds limit: " . $file['size']);
+            $this->log_to_file("File size exceeds limit", $file['size']);
             return null;
         }
 
@@ -110,41 +115,37 @@ class AuthController {
     }
 
     public function processRegister() {
-        // Mulai output buffering untuk menangkap semua output
-        ob_start();
-
-        $this->debug_log("A: Memulai proses registrasi.");
+        $this->log_to_file("A: Memulai proses registrasi.");
 
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
-            $this->debug_log("Session dimulai.");
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->debug_log("ERROR: Metode request bukan POST.", $_SERVER['REQUEST_METHOD']);
-            die();
+            $this->log_to_file("ERROR: Metode request bukan POST.", $_SERVER['REQUEST_METHOD']);
+            return; // Keluar dari fungsi jika metode salah
         }
-        $this->debug_log("Metode request adalah POST.");
+        $this->log_to_file("Metode request adalah POST.");
 
         $ktpFilename = $this->handleFileUpload($_FILES['file_ktp'] ?? null, 'uploads/ktp/');
         $kkFilename = $this->handleFileUpload($_FILES['file_kk'] ?? null, 'uploads/kk/');
         $profilePicFilename = $this->handleFileUpload($_FILES['foto_profil'] ?? null, 'uploads/profil/');
         
-        $this->debug_log("B: Proses upload file selesai.", [
+        $this->log_to_file("B: Proses upload file selesai.", [
             'file_ktp' => $ktpFilename ?? 'TIDAK ADA / GAGAL',
             'file_kk' => $kkFilename ?? 'TIDAK ADA / GAGAL',
             'foto_profil' => $profilePicFilename ?? 'TIDAK ADA / GAGAL'
         ]);
 
         if ($ktpFilename === null) {
-            $this->debug_log("ERROR: File KTP wajib di-upload atau gagal diproses.");
-            // Logika untuk menampilkan error ke pengguna tetap ada
-            // ...
-            die();
+            $this->log_to_file("ERROR: File KTP wajib di-upload atau gagal diproses.");
+            $_SESSION['registration_error'] = ['message' => 'File KTP Wajib Diisi atau Gagal Diproses', 'solution' => 'Pastikan file KTP valid dan coba lagi.'];
+            header("Location: ?url=auth/register");
+            exit;
         }
 
         $userModel = new User();
-        $this->debug_log("Model 'User' berhasil dimuat.");
+        $this->log_to_file("Model 'User' berhasil dimuat.");
         
         $data = [
             'email'             => $_POST['email'] ?? '',
@@ -172,28 +173,34 @@ class AuthController {
             'file_kk'           => $kkFilename,
             'foto_profil'       => $profilePicFilename,
         ];
-        $this->debug_log("C: Data dari form berhasil dikumpulkan.", $data);
+        $this->log_to_file("C: Data dari form berhasil dikumpulkan.");
         
         if ($userModel->emailExists($data['email'])) {
-            $this->debug_log("ERROR: Validasi gagal, email sudah ada.", $data['email']);
-            die();
+            $this->log_to_file("ERROR: Validasi gagal, email sudah ada.", $data['email']);
+            $_SESSION['registration_error'] = ['message' => 'Email sudah terdaftar.', 'solution' => 'Gunakan email lain atau coba login.'];
+            header("Location: ?url=auth/register");
+            exit;
         }
         if (!empty($data['nomor_telepon']) && $userModel->phoneExists($data['nomor_telepon'])) {
-            $this->debug_log("ERROR: Validasi gagal, nomor telepon sudah ada.", $data['nomor_telepon']);
-            die();
+            $this->log_to_file("ERROR: Validasi gagal, nomor telepon sudah ada.", $data['nomor_telepon']);
+            $_SESSION['registration_error'] = ['message' => 'Nomor telepon sudah terdaftar.', 'solution' => 'Gunakan nomor lain atau coba login.'];
+            header("Location: ?url=auth/register");
+            exit;
         }
-        $this->debug_log("D: Validasi email dan nomor telepon berhasil (tidak ada duplikat).");
+        $this->log_to_file("D: Validasi email dan nomor telepon berhasil.");
 
-        $this->debug_log("E: Mencoba menyimpan data ke database melalui metode User->register().");
+        $this->log_to_file("E: Mencoba menyimpan data ke database melalui metode User->register().");
 
         if ($userModel->register($data)) {
-            $this->debug_log("HASIL: SUKSES! Metode User->register() mengembalikan 'true'.");
-            // header("Location: ?url=auth/registrasi_berhasil"); // Dimatikan sementara untuk melihat log
-            die("<div style='background: #28a745; color: white; padding: 15px; font-family: sans-serif; text-align: center; font-size: 1.2em;'>PROSES SELESAI: Registrasi Berhasil!</div>");
+            $this->log_to_file("HASIL: SUKSES! Metode User->register() mengembalikan 'true'. Mengalihkan ke halaman berhasil.");
+            header("Location: ?url=auth/registrasi_berhasil");
         } else {
-            $this->debug_log("HASIL: GAGAL! Metode User->register() mengembalikan 'false'.");
-            // header("Location: ?url=auth/register"); // Dimatikan sementara untuk melihat log
-            die("<div style='background: #dc3545; color: white; padding: 15px; font-family: sans-serif; text-align: center; font-size: 1.2em;'>PROSES SELESAI: Registrasi Gagal! Periksa file `models/User.php` dan log error database.</div>");
+            $this->log_to_file("HASIL: GAGAL! Metode User->register() mengembalikan 'false'. Mengalihkan kembali ke form registrasi.");
+            $_SESSION['registration_error'] = [
+                'message' => 'Registrasi Gagal Disimpan',
+                'solution' => 'Terjadi kesalahan pada server saat menyimpan data. Periksa log error database atau hubungi administrasi.'
+            ];
+            header("Location: ?url=auth/register");
         }
         exit;
     }
