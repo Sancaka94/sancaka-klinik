@@ -105,6 +105,7 @@ class AuthController {
      */
         public function processRegister() {
     die("Tes A: Fungsi processRegister() berhasil dijalankan."); // <--- TAMBAHKAN INI
+    
 
     if (session_status() == PHP_SESSION_NONE) {
     // ... sisa kode
