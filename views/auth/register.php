@@ -37,8 +37,9 @@ require_once __DIR__ . '/../layouts/header_public.php';
                     </div>
 
                     <!-- Form Utama -->
-                     <form action="?url=auth/processRegister" method="POST" enctype="multipart/form-data">
-                    <!-- Step 1: Data Pribadi -->
+                     
+                    <form action="?url=auth/processRegister" method="POST" enctype="multipart/form-data" id="regForm">
+                        <!-- Step 1: Data Pribadi -->
                         <div class="form-step active">
                             <h4 class="text-center fw-semibold mb-4">Langkah 1: Data Pribadi</h4>
                             <div class="row g-3">
