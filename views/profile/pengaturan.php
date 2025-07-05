@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengaturan Profil - <?php echo htmlspecialchars($data_pasien['nama_lengkap']); ?></title>
     <style>
-        /* General Styling */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: #f4f7f9;
@@ -21,18 +20,49 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             overflow: hidden;
         }
-
-        /* Header */
         .profile-header {
             background: linear-gradient(135deg, #007bff, #0056b3);
             color: white;
             padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
+        }
+        .profile-picture-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .profile-picture {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid white;
+            object-fit: cover;
+            background-color: #e9ecef;
+        }
+        .change-photo-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background-color: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        .change-photo-btn:hover {
+            background-color: rgba(0,0,0,0.8);
         }
         .profile-header h1 { margin: 0; font-size: 2em; }
         .profile-header p { margin: 5px 0 0; opacity: 0.9; }
-
-        /* Content & Form */
         .profile-content { padding: 30px; }
         .section { margin-bottom: 30px; }
         .section-title {
@@ -47,15 +77,12 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
         }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
+        .form-group { display: flex; flex-direction: column; }
         .form-group label {
-            color: #555;
-            font-size: 0.9em;
-            margin-bottom: 5px;
             font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #555;
         }
         .form-group input, .form-group select, .form-group textarea {
             font-size: 1em;
@@ -63,46 +90,11 @@
             border: 1px solid #ced4da;
             border-radius: 6px;
             background-color: #f8f9fa;
-            transition: border-color 0.2s, box-shadow 0.2s;
         }
         .form-group input:read-only, .form-group select:disabled, .form-group textarea:read-only {
             background-color: #e9ecef;
-            border-color: #e9ecef;
             cursor: default;
         }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        }
-        textarea { resize: vertical; min-height: 80px; }
-        .data-item {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
-        }
-        .data-item strong {
-            display: block;
-            color: #555;
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-        .data-item span, .data-item a {
-            font-size: 1em;
-            color: #212529;
-            word-wrap: break-word;
-        }
-        .signature-img {
-            max-width: 100%;
-            height: auto;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-top: 5px;
-        }
-        
-        /* Buttons */
         .button-group {
             display: flex;
             gap: 10px;
@@ -117,32 +109,31 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
         }
-        .btn:active { transform: scale(0.98); }
         .btn-primary { background-color: #007bff; color: white; }
-        .btn-primary:hover { background-color: #0056b3; }
         .btn-secondary { background-color: #6c757d; color: white; }
-        .btn-secondary:hover { background-color: #5a6268; }
         .btn-success { background-color: #28a745; color: white; }
-        .btn-success:hover { background-color: #218838; }
         .btn-danger { background-color: #dc3545; color: white; }
-        .btn-danger:hover { background-color: #c82333; }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <!-- Form untuk mengirim data yang diubah -->
-        <form id="profileForm" action="?url=profile/update" method="POST">
-            <!-- Hidden input untuk ID Pasien -->
+        <form id="profileForm" action="?url=profile/update" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="id_pasien" value="<?php echo htmlspecialchars($data_pasien['id_pasien']); ?>">
+            <input type="hidden" name="foto_profil_lama" value="<?php echo htmlspecialchars($data_pasien['foto_profil']); ?>">
 
             <div class="profile-header">
+                <div class="profile-picture-container">
+                    <img id="profile-image-preview" class="profile-picture" 
+                         src="<?php echo !empty($data_pasien['foto_profil']) ? 'uploads/profil/' . htmlspecialchars($data_pasien['foto_profil']) : 'https://placehold.co/120x120/EFEFEF/AAAAAA&text=Foto'; ?>" 
+                         alt="Foto Profil">
+                    <label for="foto_profil_input" class="change-photo-btn" title="Ganti Foto Profil">&#9998;</label>
+                    <input type="file" id="foto_profil_input" name="foto_profil" accept="image/*" style="display: none;">
+                </div>
                 <h1><?php echo htmlspecialchars($data_pasien['nama_lengkap']); ?></h1>
                 <p>Profil Pasien Klinik</p>
             </div>
-
+            
             <div class="profile-content">
                 <!-- Data Diri -->
                 <div class="section">
@@ -268,6 +259,19 @@
 
         // Inisialisasi: semua field non-aktif
         toggleEditMode(false);
+
+        const fileInput = document.getElementById('foto_profil_input');
+        const imagePreview = document.getElementById('profile-image-preview');
+
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
     </script>
 
 </body>
