@@ -103,7 +103,11 @@ class AuthController {
     /**
      * Memproses semua data dari form registrasi multi-langkah.
      */
-    public function processRegister() {
+        public function processRegister() {
+    die("Tes A: Fungsi processRegister() berhasil dijalankan."); // <--- TAMBAHKAN INI
+
+    if (session_status() == PHP_SESSION_NONE) {
+    // ... sisa kode
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
