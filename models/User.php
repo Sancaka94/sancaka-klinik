@@ -1,5 +1,5 @@
 <?php
-// [DIPERBAIKI] Nama file disesuaikan menjadi 'database.php' (huruf kecil)
+// Nama file disesuaikan menjadi 'database.php' (huruf kecil)
 $database_file = __DIR__ . '/../config/database.php';
 
 // Cek apakah file database ada sebelum mencoba memuatnya.
@@ -34,7 +34,7 @@ class User {
     }
 
     /**
-     * [DIPERBAIKI] Mendaftarkan pengguna baru dengan MySQLi dan penanganan error.
+     * Mendaftarkan pengguna baru dengan MySQLi dan penanganan error.
      */
     public function register($data) {
         // Query untuk tabel pengguna
@@ -51,12 +51,14 @@ class User {
         try {
             // 1. Eksekusi query untuk tabel pengguna
             $stmt_user = $this->conn->prepare($query_user);
+            if ($stmt_user === false) {
+                throw new Exception("Gagal prepare query pengguna: " . $this->conn->error);
+            }
 
             $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
             $id_peran = 4; // Default untuk pasien
             $username = $data['email']; // Default username
 
-            // Binding parameter untuk MySQLi (tipe data: s=string, i=integer)
             $stmt_user->bind_param("sssi", $username, $data['email'], $password_hash, $id_peran);
             
             if (!$stmt_user->execute()) {
@@ -70,33 +72,13 @@ class User {
 
             // 3. Eksekusi query untuk tabel pasien
             $stmt_pasien = $this->conn->prepare($query_pasien);
+            if ($stmt_pasien === false) {
+                throw new Exception("Gagal prepare query pasien: " . $this->conn->error);
+            }
             
-            // Binding parameter untuk MySQLi (i=integer, s=string)
             $stmt_pasien->bind_param(
                 "issssssssssssssssssssss",
-                $id_pengguna_baru,
-                $data['nama_lengkap'],
-                $data['nik'],
-                $data['tempat_lahir'],
-                $data['tanggal_lahir'],
-                $data['jenis_kelamin'],
-                $data['status_perkawinan'],
-                $data['pendidikan_terakhir'],
-                $data['pekerjaan'],
-                $data['alamat'],
-                $data['nomor_telepon'],
-                $data['kontak_darurat'],
-                $data['penanggung_jawab'],
-                $data['golongan_darah'],
-                $data['agama'],
-                $data['riwayat_penyakit'],
-                $data['riwayat_alergi'],
-                $data['status_bpjs'],
-                $data['nomor_bpjs'],
-                $data['file_ktp'],
-                $data['file_kk'],
-                $data['foto_profil'],
-                $data['tanda_tangan']
+                $id_pengguna_baru, $data['nama_lengkap'], $data['nik'], $data['tempat_lahir'], $data['tanggal_lahir'], $data['jenis_kelamin'], $data['status_perkawinan'], $data['pendidikan_terakhir'], $data['pekerjaan'], $data['alamat'], $data['nomor_telepon'], $data['kontak_darurat'], $data['penanggung_jawab'], $data['golongan_darah'], $data['agama'], $data['riwayat_penyakit'], $data['riwayat_alergi'], $data['status_bpjs'], $data['nomor_bpjs'], $data['file_ktp'], $data['file_kk'], $data['foto_profil'], $data['tanda_tangan']
             );
 
             if (!$stmt_pasien->execute()) {
@@ -104,26 +86,25 @@ class User {
             }
             $this->log_to_file("Query ke tabel 'pasien' berhasil.");
             
-            // Jika semua berhasil, simpan perubahan
             $this->conn->commit();
             $this->log_to_file("Transaksi database di-commit.");
             return true;
 
         } catch (Exception $exception) {
-            // Jika terjadi error, batalkan semua perubahan
             $this->conn->rollback();
             $this->log_to_file("TRANSAKSI GAGAL! Melakukan rollback.");
-            // Catat pesan error SQL yang sebenarnya ke dalam log
             $this->log_to_file("Exception", $exception->getMessage());
             return false;
         }
     }
 
-    // Fungsi lain seperti login, emailExists, phoneExists, dll.
-    // ...
     public function login($username, $password, $id_peran) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
         $stmt = $this->conn->prepare($query);
+        if ($stmt === false) {
+            $this->log_to_file("SQL PREPARE FAILED (login): " . $this->conn->error);
+            return false;
+        }
         $stmt->bind_param("ssi", $username, $username, $id_peran);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -139,6 +120,13 @@ class User {
     public function emailExists($email) {
         $query = "SELECT id_pengguna FROM " . $this->table_name . " WHERE email = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
+        
+        // [FINAL DEBUG] Cek apakah prepare() gagal dan catat errornya.
+        if ($stmt === false) {
+            $this->log_to_file("SQL PREPARE FAILED (emailExists): " . $this->conn->error);
+            return true; // Anggap ada untuk mencegah error fatal lebih lanjut
+        }
+        
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $stmt->store_result();
@@ -148,6 +136,13 @@ class User {
     public function phoneExists($phone) {
         $query = "SELECT id_pasien FROM pasien WHERE nomor_telepon = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
+        
+        // [FINAL DEBUG] Cek apakah prepare() gagal dan catat errornya.
+        if ($stmt === false) {
+            $this->log_to_file("SQL PREPARE FAILED (phoneExists): " . $this->conn->error);
+            return true; // Anggap ada untuk mencegah error fatal lebih lanjut
+        }
+        
         $stmt->bind_param("s", $phone);
         $stmt->execute();
         $stmt->store_result();
