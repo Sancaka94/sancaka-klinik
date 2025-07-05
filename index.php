@@ -1,80 +1,68 @@
 <?php
-// File: index.php
+/**
+ * File: index.php
+ * Deskripsi: Ini adalah titik masuk utama (front controller) untuk seluruh aplikasi.
+ * Semua permintaan akan melewati file ini terlebih dahulu.
+ */
 
-// 1. Pengaturan Error Reporting yang Ketat
-error_reporting(E_ALL);
-ini_set('display_errors', 1); // Aktifkan untuk development, matikan (set ke 0) untuk production
+// 1. Tampilkan semua error untuk mempermudah debugging selama masa pengembangan.
+//    (Bisa dimatikan di server produksi nanti)
+ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// 2. Custom Exception Handler (untuk menangkap error fatal dan mengarahkan ke halaman debug)
-set_exception_handler(function($exception) {
-    // Anda bisa menambahkan logika logging ke file di sini jika perlu
-    
-    // Alihkan ke halaman debug dengan pesan error
-    $redirectUrl = '?url=debug&error=' . urlencode($exception->getMessage());
-    header('Location: ' . $redirectUrl);
-    exit;
-});
-
-// 3. Memulai Session
-// Session harus dimulai setelah semua pengaturan error agar bisa menangani session-related errors
+// 2. Mulai session untuk menangani data login dan pesan error.
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// 4. Logika Router Utama
-// Halaman default adalah 'home' untuk pengunjung baru
-$url = $_GET['url'] ?? 'home'; 
+// 3. Ambil URL yang diminta oleh pengguna.
+//    Jika tidak ada URL spesifik (misal: saat membuka halaman utama),
+//    maka default akan diarahkan ke controller 'home'.
+$url = $_GET['url'] ?? 'home';
 
-// **PENYEMPURNAAN:** Jika pengguna sudah login dan mengakses halaman home, arahkan ke dashboard
-if ($url === 'home' && isset($_SESSION['user'])) {
-    // Arahkan ke dashboard yang sesuai dengan peran pengguna
-    // Ini mencegah pengguna yang sudah login melihat halaman beranda lagi.
-    switch ($_SESSION['user']['id_peran']) {
-        case 1:
-            header('Location: ?url=dashboard/superadmin');
-            exit;
-        case 2:
-            header('Location: ?url=dashboard/admin');
-            exit;
-        case 3:
-            header('Location: ?url=dashboard/dokter');
-            exit;
-        case 4:
-            header('Location: ?url=dashboard/pasien');
-            exit;
-    }
-}
+// 4. Bersihkan dan pecah URL menjadi beberapa bagian berdasarkan '/'.
+//    Contoh: 'auth/register' akan menjadi ['auth', 'register']
+$urlParts = explode('/', filter_var(rtrim($url, '/'), FILTER_SANITIZE_URL));
 
-$urlParts = explode('/', rtrim($url, '/'));
-
-$controllerName = ucfirst($urlParts[0]) . 'Controller';
-$method = $urlParts[1] ?? 'index';
+// 5. Tentukan nama Controller dari bagian pertama URL.
+//    Contoh: dari 'auth', nama controller menjadi 'AuthController'.
+//    Jika URL kosong, default ke 'HomeController'.
+$controllerName = !empty($urlParts[0]) ? ucfirst($urlParts[0]) . 'Controller' : 'HomeController';
 $controllerFile = __DIR__ . '/controllers/' . $controllerName . '.php';
 
+// 6. Tentukan nama Method (fungsi) dari bagian kedua URL.
+//    Contoh: dari 'register', nama method menjadi 'register'.
+//    Jika tidak ada, default ke method 'index'.
+$methodName = $urlParts[1] ?? 'index';
+
+// 7. Periksa apakah file controller-nya ada.
 if (file_exists($controllerFile)) {
     require_once $controllerFile;
 
+    // 8. Periksa apakah class controller-nya ada di dalam file tersebut.
     if (class_exists($controllerName)) {
         $controller = new $controllerName();
 
-        if (method_exists($controller, $method)) {
-            // Menggunakan try-catch untuk menangkap exception dari dalam controller
-            try {
-                $controller->$method();
-            } catch (Throwable $t) {
-                // Jika ada exception, panggil handler yang sudah kita set di atas
-                throw $t;
-            }
+        // 9. Periksa apakah method-nya ada di dalam class controller.
+        if (method_exists($controller, $methodName)) {
+            // Ambil sisa bagian URL sebagai parameter untuk method.
+            $params = array_slice($urlParts, 2);
+            
+            // Panggil method pada controller dengan parameter yang ada.
+            call_user_func_array([$controller, $methodName], $params);
         } else {
-            // Melempar exception jika method tidak ditemukan
-            throw new Exception("Method <strong>$method</strong> tidak ditemukan di <strong>$controllerName</strong>.");
+            // Error jika method tidak ditemukan.
+            http_response_code(404);
+            echo "Error 404: Method '$methodName' tidak ditemukan pada controller '$controllerName'.";
         }
     } else {
-        // Melempar exception jika class tidak ditemukan
-        throw new Exception("Class <strong>$controllerName</strong> tidak tersedia di file <strong>$controllerFile</strong>.");
+        // Error jika class tidak ditemukan.
+        http_response_code(404);
+        echo "Error 404: Class controller '$controllerName' tidak ditemukan.";
     }
 } else {
-    // Melempar exception jika file controller tidak ditemukan
-    throw new Exception("File controller <strong>$controllerFile</strong> tidak ditemukan.");
+    // Error jika file controller tidak ditemukan.
+    http_response_code(404);
+    echo "Error 404: Halaman tidak ditemukan (Controller '$controllerName' tidak ada).";
 }
