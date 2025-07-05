@@ -1,27 +1,24 @@
 <?php
 // File: views/layouts/header.php
 
-// Memulai session jika belum aktif, penting untuk mengakses data login
+// Memulai session jika belum aktif
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Variabel ini dibutuhkan oleh navigasi, jadi kita siapkan di sini.
+// Menyiapkan variabel pengguna untuk navigasi
 $user = $_SESSION['user'] ?? null;
 $is_logged_in = ($user !== null);
 
-// Inisialisasi variabel dengan nilai default untuk mencegah error jika user tidak login
+// Nilai default jika pengguna tidak login
 $display_name = 'Tamu';
 $foto_profil_path = 'https://placehold.co/100x100/E2E8F0/4A5568?text=G';
 $default_avatar = 'https://placehold.co/100x100/E2E8F0/4A5568?text=G';
 
 if ($is_logged_in) {
-    // Menentukan path foto profil, menggunakan default jika tidak ada.
     $foto_profil_path = (!empty($user['foto_profil'])) 
         ? 'uploads/profiles/' . htmlspecialchars($user['foto_profil']) 
         : $default_avatar;
-
-    // Nama lengkap untuk ditampilkan, dengan fallback ke username jika nama lengkap kosong.
     $display_name = htmlspecialchars($user['nama_lengkap'] ?? $user['username']);
 }
 ?>
@@ -32,63 +29,120 @@ if ($is_logged_in) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Klinik Sehat</title>
     
-    <!-- Memuat Tailwind CSS melalui CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat file Bootstrap 5 CSS dari folder lokal -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
     
-    <!-- (Opsional) Font Inter seperti di dashboard Anda -->
+    <!-- Font Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Style kustom -->
     <style>
-        /* Menerapkan font Inter ke seluruh halaman */
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: 700;
+        }
+        .profile-img {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
         }
     </style>
 </head>
-<body class="bg-gray-100">
+<body>
 
-<div class="min-h-screen flex flex-col">
-    <!-- Header Navigasi yang konsisten dengan Dashboard -->
-    <nav class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <a href="?url=dashboard/pasien" class="flex items-center space-x-2">
-                    <svg class="h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.5v3m0 9v3m4.5-7.5h3m-15 0h3" /></svg>
-                    <div class="flex-shrink-0 text-2xl font-bold text-indigo-600">Klinik Sehat</div>
-                </a>
-                
-                <?php if ($is_logged_in && $user['id_peran'] == 4): // Tampilkan hanya jika pasien sudah login ?>
-                <div class="flex items-center space-x-4">
-                    <a href="?url=notifikasi/index" class="relative text-gray-600 hover:text-indigo-600 p-2 rounded-full">
-                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                        <span id="notification-badge" class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white hidden"></span>
-                    </a>
-                    <div class="relative">
-                        <button id="profile-menu-button" class="flex text-sm bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <img class="h-8 w-8 rounded-full object-cover" src="<?php echo $foto_profil_path; ?>" alt="Foto Profil" onerror="this.onerror=null;this.src='<?php echo $default_avatar; ?>';">
-                        </button>
-                        <div id="profile-menu" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu">
-                            <div class="px-4 py-2 border-b">
-                                <p class="text-sm text-gray-700">Masuk sebagai</p>
-                                <p class="text-sm font-medium text-gray-900 truncate"><?php echo $display_name; ?></p>
-                            </div>
-                            <a href="?url=profile/pengaturan" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                                <svg class="h-5 w-5 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                Pengaturan Profil
-                            </a>
-                            <a href="?url=auth/logout" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                                <svg class="h-5 w-5 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                                Logout
-                            </a>
-                        </div>
-                    </div>
-                </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand text-primary" href="?url=dashboard/pasien">
+            Klinik Sehat
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                <?php if ($is_logged_in && $user['id_peran'] == 4): // Tampilkan hanya jika pasien login ?>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="?url=notifikasi/index">
+                            <!-- Ganti dengan ikon notifikasi Bootstrap jika ada, atau gunakan SVG -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bell" viewBox="0 0 16 16">
+                              <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/>
+                            </svg>
+                            <span id="notification-badge" class="position-absolute top-2 start-100 translate-middle p-1 bg-danger border border-light rounded-circle visually-hidden"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="<?php echo $foto_profil_path; ?>" alt="Foto Profil" class="rounded-circle profile-img" onerror="this.onerror=null;this.src='<?php echo $default_avatar; ?>';">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><h6 class="dropdown-header">Masuk sebagai<br><span class="fw-normal"><?php echo $display_name; ?></span></h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="?url=profile/pengaturan">Pengaturan Profil</a></li>
+                            <li><a class="dropdown-item" href="?url=auth/logout">Logout</a></li>
+                        </ul>
+                    </li>
                 <?php endif; ?>
-            </div>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <!-- Membuka container utama untuk konten halaman -->
-    <main class="flex-grow">
+<!-- Konten utama akan dimulai di sini -->
+<main class="container py-4">
+```
+
+---
+
+Dan ini adalah file **`footer.php`** yang sesuai. Buat file baru di `views/layouts/footer.php` dan isi dengan kode ini.
+
+
+```php
+<?php
+// File: views/layouts/footer.php
+?>
+
+</main> <!-- Menutup tag <main> dari header.php -->
+
+<footer class="bg-white mt-auto py-3 shadow-sm">
+    <div class="container text-center text-muted">
+        &copy; <?php echo date('Y'); ?> Klinik Sehat.
+    </div>
+</footer>
+
+<!-- Memuat file Bootstrap 5 JS Bundle dari folder lokal -->
+<!-- Ini penting untuk fungsionalitas seperti dropdown menu -->
+<script src="js/bootstrap.bundle.min.js"></script>
+
+<!-- 
+    Di sini Anda bisa menempatkan script JavaScript spesifik halaman Anda.
+    Contohnya, script untuk update dashboard pasien bisa diletakkan di sini
+    jika halaman yang ditampilkan adalah dashboard pasien.
+-->
+
+</body>
+</html>
+```
+
+### Cara Menggunakannya
+
+1.  **Ganti** isi `views/layouts/header.php` dengan kode dari artefak pertama.
+2.  **Buat** file `views/layouts/footer.php` dengan kode dari artefak kedua.
+3.  Di setiap halaman Anda (misalnya `dashboard_pasien.php`), pastikan strukturnya seperti ini:
+    ```php
+    <?php require_once 'views/layouts/header.php'; ?>
+
+    <!-- 
+        KONTEN HALAMAN ANDA DI SINI
+        PENTING: Anda perlu mengubah kelas-kelas Tailwind CSS di konten Anda
+        menjadi kelas-kelas Bootstrap 5 (misal: 'mb-4' tetap, tapi 'grid' menjadi 'row' dan 'col').
+    -->
+
+    <?php require_once 'views/layouts/footer.php'; ?>
+    ```
+
+Dengan perubahan ini, website Anda sekarang akan menggunakan file Bootstrap lokal yang sudah Anda miliki, dan semuanya akan terlihat konsist
