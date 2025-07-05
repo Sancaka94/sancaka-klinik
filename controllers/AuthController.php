@@ -57,23 +57,37 @@ class AuthController {
 
         $userModel = new User();
         
-        // Mengumpulkan semua data dari $_POST
+        // Mengumpulkan semua data dari $_POST dan $_FILES
         $data = [
+            // Step 1 & 5
             'email'             => $_POST['email'] ?? '',
-            'nomor_telepon'     => $_POST['nomor_telepon'] ?? '',
             'password'          => $_POST['password'] ?? '',
+            // Step 2
             'nama_lengkap'      => $_POST['nama_lengkap'] ?? '',
+            'nik'               => $_POST['nik'] ?? '',
+            'tempat_lahir'      => $_POST['tempat_lahir'] ?? '',
             'tanggal_lahir'     => $_POST['tanggal_lahir'] ?? '',
-            'usia'              => filter_var($_POST['usia'], FILTER_SANITIZE_NUMBER_INT) ?: null,
             'jenis_kelamin'     => $_POST['jenis_kelamin'] ?? '',
+            'status_perkawinan' => $_POST['status_perkawinan'] ?? '',
+            'pendidikan_terakhir' => $_POST['pendidikan_terakhir'] ?? '',
+            'pekerjaan'         => $_POST['pekerjaan'] ?? '',
+            // Step 3
             'alamat'            => $_POST['alamat'] ?? '',
-            'berat_badan'       => $_POST['berat_badan'] ?? null,
-            'tinggi_badan'      => $_POST['tinggi_badan'] ?? null,
-            'keluhan'           => $_POST['keluhan'] ?? '',
-            'sejak_kapan_sakit' => $_POST['sejak_kapan_sakit'] ?? null,
-            'poli_tujuan'       => $_POST['poli_tujuan'] ?? '',
+            'nomor_telepon'     => $_POST['nomor_telepon'] ?? '',
+            'kontak_darurat'    => $_POST['kontak_darurat'] ?? '',
             'penanggung_jawab'  => $_POST['penanggung_jawab'] ?? '',
-            'foto_profil_file'  => $_FILES['foto_profil'] ?? null // Menyertakan file foto
+            // Step 4
+            'golongan_darah'    => $_POST['golongan_darah'] ?? '',
+            'agama'             => $_POST['agama'] ?? '',
+            'riwayat_penyakit'  => $_POST['riwayat_penyakit'] ?? '',
+            'riwayat_alergi'    => $_POST['riwayat_alergi'] ?? '',
+            'status_bpjs'       => $_POST['status_bpjs'] ?? 'Tidak Ada',
+            'nomor_bpjs'        => $_POST['nomor_bpjs'] ?? null,
+            // Step 5
+            'file_ktp'          => $_FILES['file_ktp'] ?? null,
+            'file_kk'           => $_FILES['file_kk'] ?? null,
+            'foto_profil'       => $_FILES['foto_profil'] ?? null,
+            'tanda_tangan'      => $_POST['tanda_tangan'] ?? ''
         ];
 
         // Validasi email dan nomor telepon sebelum mencoba mendaftar
