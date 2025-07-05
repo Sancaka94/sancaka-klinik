@@ -181,12 +181,19 @@ class AuthController {
             header("Location: ?url=auth/register");
             exit;
         }
-        if (!empty($data['nomor_telepon']) && $userModel->phoneExists($data['nomor_telepon'])) {
+        
+        // ==============================================================================
+        // [PERBAIKAN] Blok validasi nomor telepon dinonaktifkan untuk sementara.
+        // Hapus tanda '/*' dan '*/' di bawah ini jika Anda ingin mengaktifkannya kembali.
+        /* if (!empty($data['nomor_telepon']) && $userModel->phoneExists($data['nomor_telepon'])) {
             $this->log_to_file("ERROR: Validasi gagal, nomor telepon sudah ada.", $data['nomor_telepon']);
             $_SESSION['registration_error'] = ['message' => 'Nomor telepon sudah terdaftar.', 'solution' => 'Gunakan nomor lain atau coba login.'];
             header("Location: ?url=auth/register");
             exit;
         }
+        */
+        // ==============================================================================
+
         $this->log_to_file("D: Validasi email dan nomor telepon berhasil.");
 
         $this->log_to_file("E: Mencoba menyimpan data ke database melalui metode User->register().");
