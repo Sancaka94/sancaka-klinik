@@ -6,7 +6,15 @@ class HomeController {
      * Menampilkan halaman utama (landing page) aplikasi.
      */
     public function index() {
-        // Memuat file view untuk halaman utama
-        require_once __DIR__ . '/../views/home.php';
+        // [DIPERBAIKI] Menambahkan pengecekan file sebelum memuatnya.
+        $view_file = __DIR__ . '/../views/home.php';
+
+        if (file_exists($view_file)) {
+            // Jika file ditemukan, muat halamannya.
+            require_once $view_file;
+        } else {
+            // Jika tidak, tampilkan pesan error yang lebih jelas.
+            die("Error: File view tidak ditemukan. Pastikan Anda memiliki file di path: " . $view_file);
+        }
     }
 }
