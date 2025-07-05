@@ -1,7 +1,6 @@
 <?php
-// [PERIKSA DI SINI] Pastikan path ini benar-benar menunjuk ke file koneksi database Anda.
-// Path ini mengasumsikan ada folder 'config' di direktori utama aplikasi Anda.
-$database_file = __DIR__ . '/../config/Database.php';
+// [DIPERBAIKI] Nama file disesuaikan menjadi 'database.php' (huruf kecil)
+$database_file = __DIR__ . '/../config/database.php';
 
 // Cek apakah file database ada sebelum mencoba memuatnya.
 if (!file_exists($database_file)) {
