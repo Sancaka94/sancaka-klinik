@@ -99,7 +99,7 @@ class User {
     }
 
     /**
-     * [DIPERBAIKI] Fungsi login yang tidak menggunakan get_result() agar kompatibel.
+     * Fungsi login yang tidak menggunakan get_result() agar kompatibel.
      */
     public function login($username, $password, $id_peran) {
         // Secara eksplisit sebutkan kolom yang dibutuhkan
@@ -114,17 +114,13 @@ class User {
         $stmt->bind_param("ssi", $username, $username, $id_peran);
         $stmt->execute();
         
-        // Simpan hasil agar bisa mengecek jumlah baris
         $stmt->store_result();
 
         if ($stmt->num_rows > 0) {
-            // Ikat hasil ke variabel-variabel
             $stmt->bind_result($id_pengguna, $db_username, $db_email, $db_password, $db_id_peran);
             $stmt->fetch();
 
-            // Verifikasi password
             if (password_verify($password, $db_password)) {
-                // Buat array user secara manual
                 $user = [
                     'id_pengguna' => $id_pengguna,
                     'username' => $db_username,
@@ -169,13 +165,9 @@ class User {
     }
 
     /**
-     * [FUNGSI BARU & DIPERBAIKI] Mengambil semua data dari tabel 'pasien' dan 'pengguna'
-     * berdasarkan id_pengguna, tanpa menggunakan get_result().
-     * @param int $id_pengguna ID pengguna yang sedang login.
-     * @return array|null Data profil gabungan jika ditemukan, atau null jika tidak.
+     * Mengambil semua data dari tabel 'pasien' dan 'pengguna' berdasarkan id_pengguna.
      */
     public function getPatientProfileById($id_pengguna) {
-        // Query untuk menggabungkan (JOIN) tabel pengguna dan pasien
         $query = "SELECT p.*, u.email, u.username 
                   FROM pasien p 
                   JOIN pengguna u ON p.id_pengguna = u.id_pengguna 
@@ -189,23 +181,75 @@ class User {
 
         $stmt->bind_param("i", $id_pengguna);
         $stmt->execute();
-        $stmt->store_result();
-
-        if ($stmt->num_rows > 0) {
-            // Cara dinamis untuk bind semua kolom hasil ke sebuah array
-            $data = [];
-            $meta = $stmt->result_metadata();
-            $params = [];
-            while ($field = $meta->fetch_field()) {
-                $params[] = &$data[$field->name];
-            }
-
-            call_user_func_array([$stmt, 'bind_result'], $params);
-            
-            $stmt->fetch();
-            return $data;
+        
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            return $result->fetch_assoc();
         }
 
         return null;
+    }
+    
+    /**
+     * [DIPERBARUI] Memperbarui data profil pasien di database dengan semua field.
+     * @param array $data Data dari form profil.
+     * @return bool True jika berhasil, false jika gagal.
+     */
+    public function updatePatientProfile($data) {
+        $query = "UPDATE pasien SET 
+                    nama_lengkap = ?,
+                    tempat_lahir = ?,
+                    tanggal_lahir = ?,
+                    jenis_kelamin = ?,
+                    agama = ?,
+                    status_perkawinan = ?,
+                    nomor_telepon = ?,
+                    kontak_darurat = ?,
+                    alamat = ?,
+                    pendidikan_terakhir = ?,
+                    pekerjaan = ?,
+                    golongan_darah = ?,
+                    status_bpjs = ?,
+                    nomor_bpjs = ?,
+                    riwayat_penyakit = ?,
+                    riwayat_alergi = ?
+                  WHERE id_pasien = ?";
+                  
+        $stmt = $this->conn->prepare($query);
+        if ($stmt === false) {
+            $this->log_to_file("SQL PREPARE FAILED (updatePatientProfile): " . $this->conn->error);
+            return false;
+        }
+        
+        // Bind parameter (s = string, i = integer)
+        // Jumlah 's' harus cocok dengan jumlah '?' di query (16 's' dan 1 'i')
+        $stmt->bind_param(
+            "ssssssssssssssssi",
+            $data['nama_lengkap'],
+            $data['tempat_lahir'],
+            $data['tanggal_lahir'],
+            $data['jenis_kelamin'],
+            $data['agama'],
+            $data['status_perkawinan'],
+            $data['nomor_telepon'],
+            $data['kontak_darurat'],
+            $data['alamat'],
+            $data['pendidikan_terakhir'],
+            $data['pekerjaan'],
+            $data['golongan_darah'],
+            $data['status_bpjs'],
+            $data['nomor_bpjs'],
+            $data['riwayat_penyakit'],
+            $data['riwayat_alergi'],
+            $data['id_pasien']
+        );
+        
+        if ($stmt->execute()) {
+            $this->log_to_file("Update profil berhasil untuk id_pasien: " . $data['id_pasien']);
+            return true;
+        } else {
+            $this->log_to_file("SQL EXECUTE FAILED (updatePatientProfile): " . $stmt->error);
+            return false;
+        }
     }
 }
