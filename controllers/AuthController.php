@@ -3,15 +3,11 @@ require_once __DIR__ . '/../models/User.php';
 
 class AuthController {
 
-    // ... (method login, register, authenticate, logout tetap sama) ...
+    // ... (method login, authenticate, logout tetap sama) ...
     public function login() {
         require __DIR__ . '/../views/auth/login.php';
     }
-    public function register() {
-        require __DIR__ . '/../views/auth/register.php';
-    }
     public function authenticate() {
-        // Logika otentikasi yang sudah ada
         $userModel = new User();
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
@@ -44,6 +40,20 @@ class AuthController {
         exit;
     }
 
+
+    /**
+     * Menampilkan halaman form registrasi.
+     */
+    public function register() {
+        require __DIR__ . '/../views/auth/register.php';
+    }
+
+    /**
+     * **FUNGSI BARU:** Menampilkan halaman konfirmasi setelah registrasi berhasil.
+     */
+    public function registrasi_berhasil() {
+        require __DIR__ . '/../views/auth/registrasi_berhasil.php';
+    }
 
     /**
      * Memproses semua data dari form registrasi multi-langkah.
@@ -102,7 +112,8 @@ class AuthController {
 
         // Panggil fungsi register di model dengan data yang sudah lengkap
         if ($userModel->register($data)) {
-            header("Location: ?url=auth/login&success=Registrasi berhasil. Silakan login.");
+            // **PERBAIKAN:** Arahkan ke halaman konfirmasi sukses
+            header("Location: ?url=auth/registrasi_berhasil");
         } else {
             header("Location: ?url=auth/register&error=Registrasi gagal karena kesalahan server.");
         }
