@@ -1,78 +1,78 @@
 <?php
 // File: views/auth/login.php
-// TIDAK PERLU ADA require_once untuk model di sini.
-// File ini hanya untuk menampilkan HTML.
+// Versi ini menggunakan Bootstrap 5 untuk tampilan yang bersih dan profesional.
 
-// Memanggil header
+// Memanggil header. Pastikan header.php memuat file bootstrap.min.css.
 require_once __DIR__ . '/../layouts/header.php';
-
-// Menampilkan pesan error jika ada
-if (isset($_GET['error'])) {
-    echo '<div class="alert alert-danger" role="alert">' . htmlspecialchars($_GET['error']) . '</div>';
-}
-// Menampilkan pesan sukses jika ada (misal: setelah registrasi)
-if (isset($_GET['status']) && $_GET['status'] === 'registrasi_sukses') {
-    echo '<div class="alert alert-success" role="alert">Registrasi berhasil! Silakan login.</div>';
-}
 ?>
 
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0">Login Pengguna</h4>
-            </div>
-            <div class="card-body p-4">
-                <form action="?url=auth/authenticate" method="POST">
-                    <!-- Input Username/Email -->
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username atau Email</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0">Login Akun</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-center text-muted mb-4">Silakan masuk untuk melanjutkan.</p>
+
+                    <?php
+                    // Menampilkan pesan error jika ada
+                    if (isset($_GET['error'])) {
+                        echo '<div class="alert alert-danger" role="alert">' . htmlspecialchars($_GET['error']) . '</div>';
+                    }
+                    // Menampilkan pesan sukses jika ada
+                    if (isset($_GET['status']) && $_GET['status'] === 'registrasi_sukses') {
+                        echo '<div class="alert alert-success" role="alert">Registrasi berhasil! Silakan login.</div>';
+                    }
+                    ?>
+
+                    <form action="?url=auth/authenticate" method="POST">
+                        <!-- Input Username/Email -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username atau Email</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Masukkan username atau email" required>
+                        </div>
+
+                        <!-- Input Password -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password" required>
+                        </div>
+
+                        <!-- Pilihan Peran/Role -->
+                        <div class="mb-4">
+                            <label for="id_peran" class="form-label">Login sebagai</label>
+                            <select class="form-select" id="id_peran" name="id_peran" required>
+                                <option value="" disabled selected>-- Pilih Peran --</option>
+                                <option value="4">Pasien</option>
+                                <option value="3">Dokter</option>
+                                <option value="2">Admin</option>
+                                <option value="1">Super Admin</option>
+                                <option value="5">Owner</option>
+                            </select>
+                        </div>
+
+                        <!-- Tombol Submit -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="text-muted mb-2">Belum punya akun?</p>
+                        <a href="?url=auth/register" class="btn btn-outline-secondary btn-sm">Daftar sebagai Pasien</a>
+                        <a href="?url=auth/register_dokter" class="btn btn-outline-success btn-sm">Daftar sebagai Dokter</a>
                     </div>
-
-                   <form class="mt-8 space-y-6" action="?url=auth/authenticate" method="POST">
-            <input type="hidden" name="remember" value="true">
-            <div class="space-y-4 rounded-md shadow-sm">
-                <div>
-                    <label for="username" class="sr-only">Username atau Email</label>
-                    <input id="username" name="username" type="text" required class="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-md appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Username atau Email">
                 </div>
-                <div>
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password" name="password" type="password" required class="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-md appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password">
-                </div>
-                 <div>
-                    <label for="id_peran" class="sr-only">Login sebagai</label>
-                    <select id="id_peran" name="id_peran" required class="relative block w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-md appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
-                        <option value="" disabled selected>-- Pilih Peran --</option>
-                        <option value="4">Pasien</option>
-                        <option value="3">Dokter</option>
-                        <option value="2">Admin</option>
-                        <option value="1">Super Admin</option>
-                        <option value="5">Owner</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <button type="submit" class="relative flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md group hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Login
-                </button>
-            </div>
-        </form>
-
-        <div class="pt-4 text-sm text-center text-gray-600">
-            <p>Belum punya akun?</p>
-            <div class="mt-2 space-x-2">
-                 <a href="?url=auth/register" class="font-medium text-indigo-600 hover:text-indigo-500">Daftar Pasien</a>
-                 <span>|</span>
-                 <a href="?url=auth/register_dokter" class="font-medium text-indigo-600 hover:text-indigo-500">Daftar Dokter</a>
             </div>
         </div>
     </div>
 </div>
 
 <?php
-// Memanggil footer
+// Memanggil footer. Pastikan footer.php memuat file bootstrap.bundle.min.js.
 require_once __DIR__ . '/../layouts/footer.php';
 ?>
