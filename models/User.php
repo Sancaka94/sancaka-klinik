@@ -10,7 +10,29 @@ class User {
     }
 
     // --- Metode Login & Registrasi ---
-    public function login($username, $password, $id_peran) { /* ... (kode dari sebelumnya) ... */ }
+    public function login($username, $password, $id_peran) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
+        $stmt = null;
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("ssi", $username, $username, $id_peran);
+            $stmt->execute();
+            $result = $this->getDynamicResult($stmt);
+            if (count($result) === 1) {
+                $user = $result[0];
+                if (password_verify($password, $user['password'])) {
+                    return $user;
+                }
+                return 'WRONG_PASSWORD';
+            }
+            return 'USER_NOT_FOUND';
+        } catch (Exception $e) {
+            error_log("KRITIS - Error di User->login(): " . $e->getMessage());
+            return 'DB_ERROR';
+        } finally {
+            if ($stmt !== null) $stmt->close();
+        }
+    }
     public function register($data) { /* ... (kode dari sebelumnya) ... */ }
     public function registerDokter($data) { /* ... (kode dari sebelumnya) ... */ }
     public function emailExists($email) { /* ... (kode dari sebelumnya) ... */ }
