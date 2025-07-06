@@ -6,8 +6,8 @@ class HomeController {
      * Menampilkan halaman utama (landing page) aplikasi.
      */
     public function index() {
-        // [DIPERBAIKI] Menambahkan pengecekan file sebelum memuatnya.
-        $view_file = __DIR__ . '/../views/home.php';
+        // [DIPERBAIKI] Path disesuaikan dengan struktur folder Anda.
+        $view_file = __DIR__ . '/../views/home/index.php';
 
         if (file_exists($view_file)) {
             // Jika file ditemukan, muat halamannya.
