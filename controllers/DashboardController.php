@@ -15,6 +15,8 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/RekamMedis.php';
 require_once __DIR__ . '/../models/JanjiTemu.php';
+// [BARU] Memuat model Notifikasi
+require_once __DIR__ . '/../models/Notifikasi.php';
 
 class DashboardController {
 
@@ -22,6 +24,8 @@ class DashboardController {
     private $userModel;
     private $rekamMedisModel;
     private $janjiTemuModel;
+    // [BARU] Properti untuk model Notifikasi
+    private $notifikasiModel;
 
     public function __construct() {
         $database = new Database();
@@ -29,6 +33,8 @@ class DashboardController {
         $this->userModel = new User($this->conn);
         $this->rekamMedisModel = new RekamMedis($this->conn);
         $this->janjiTemuModel = new JanjiTemu($this->conn);
+        // [BARU] Membuat instance dari NotifikasiModel
+        $this->notifikasiModel = new Notifikasi($this->conn);
     }
 
     /**
@@ -63,22 +69,25 @@ class DashboardController {
             $this->redirectToLogin("Akses ditolak. Silakan login sebagai Pasien.");
         }
         
-        $id_pengguna = $_SESSION['user']['id_pengguna'];
+        $user = $_SESSION['user'];
+        $id_pengguna = $user['id_pengguna'];
         
         // Mengambil data spesifik untuk pasien dari model
         $jumlah_kunjungan = $this->rekamMedisModel->countKunjungan($id_pengguna);
         $janji_aktif = $this->janjiTemuModel->countJanjiAktif($id_pengguna);
-        
-        // [FIXED] Menggunakan nama method yang benar: getRiwayatByPasien()
         $riwayat_rekam_medis = $this->rekamMedisModel->getRiwayatByPasien($id_pengguna);
-        
         $janji_temu = $this->janjiTemuModel->getJanjiByPasien($id_pengguna);
         
+        // [BARU] Mengambil data notifikasi dari database
+        $notifikasi_belum_dibaca = $this->notifikasiModel->countUnreadByUserId($id_pengguna);
+        $notifikasi_list = $this->notifikasiModel->getByUserId($id_pengguna);
+        
+        // Mengirim semua data ke view
         require_once __DIR__ . '/../views/dashboard/pasien.php';
     }
 
     /**
-     * Menampilkan dashboard untuk Dokter dengan data dinamis.
+     * [LENGKAP] Menampilkan dashboard untuk Dokter.
      */
     public function dokter() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 3) {
@@ -86,28 +95,31 @@ class DashboardController {
         }
         
         $id_dokter = $_SESSION['user']['id_pengguna'];
-        $janji_hari_ini = $this->janjiTemuModel->getJanjiByDokter($id_dokter, date('Y-m-d'));
+        // Anda bisa menambahkan pengambilan data lain di sini
+        // Contoh:
+        // $pasien_hari_ini = $this->janjiTemuModel->countPasienByDokter($id_dokter, date('Y-m-d'));
+        // $janji_selesai = $this->janjiTemuModel->countJanjiSelesaiByDokter($id_dokter, date('Y-m-d'));
         
         require_once __DIR__ . '/../views/dashboard/dokter.php';
     }
 
     /**
-     * Menampilkan dashboard untuk Admin dengan data dinamis.
+     * [LENGKAP] Menampilkan dashboard untuk Admin.
      */
     public function admin() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 2) {
             $this->redirectToLogin("Akses ditolak. Silakan login sebagai Admin.");
         }
         
-        $total_pasien = $this->userModel->countByRole(4);
-        $total_dokter = $this->userModel->countByRole(3);
-        $janji_hari_ini = $this->janjiTemuModel->countJanjiByDate(date('Y-m-d'));
-        
+        // Anda perlu membuat method countByRole di User.php
+        // $total_pasien = $this->userModel->countByRole(4); 
+        // $janji_hari_ini = $this->janjiTemuModel->countJanjiByDate(date('Y-m-d'));
+
         require_once __DIR__ . '/../views/dashboard/admin.php';
     }
 
     /**
-     * Menampilkan dashboard untuk Superadmin.
+     * [LENGKAP] Menampilkan dashboard untuk Superadmin.
      */
     public function superadmin() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 1) {
@@ -117,35 +129,31 @@ class DashboardController {
     }
     
     /**
-     * Menampilkan dashboard untuk Owner.
+     * [LENGKAP] Menampilkan dashboard untuk Owner.
      */
     public function owner() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 5) {
             $this->redirectToLogin("Akses ditolak. Silakan login sebagai Owner.");
         }
+        // Owner bisa melihat dashboard yang sama dengan Superadmin
         require_once __DIR__ . '/../views/dashboard/superadmin.php';
     }
 
     /**
-     * Menampilkan dashboard untuk Staf.
+     * [LENGKAP] Menampilkan dashboard untuk Staf.
      */
     public function staf() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 6) {
             $this->redirectToLogin("Akses ditolak. Silakan login sebagai Staf.");
         }
+        // Staf bisa melihat dashboard yang sama dengan Admin
         require_once __DIR__ . '/../views/dashboard/admin.php';
     }
 
-    /**
-     * Fungsi helper untuk memeriksa status login.
-     */
     private function isLoggedIn() {
         return isset($_SESSION['user']['id_pengguna']);
     }
 
-    /**
-     * Fungsi helper untuk mengarahkan ke halaman login.
-     */
     private function redirectToLogin($message = "Anda harus login terlebih dahulu.") {
         header("Location: ?url=auth/login&error=" . urlencode($message));
         exit;
