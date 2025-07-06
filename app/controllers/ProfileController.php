@@ -6,8 +6,8 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // Memuat file-file yang diperlukan
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/User.php';
+require_once BASE_PATH . '/../config/database.php';
+require_once BASE_PATH . '/../models/User.php';
 
 class ProfileController {
     private $conn;
@@ -37,7 +37,7 @@ class ProfileController {
              header("Location: ?url=auth/login&error=Sesi tidak valid.");
              exit;
         }
-        require_once __DIR__ . '/../views/profile/pengaturan.php';
+        require_once BASE_PATH . '/../views/profile/pengaturan.php';
     }
 
     /**
