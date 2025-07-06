@@ -8,96 +8,67 @@ class User {
     public function __construct($db) {
         $this->conn = $db;
     }
-    
-    // --- Metode yang sudah ada ---
-    public function login($username, $password, $id_peran) { /* ... (kode dari sebelumnya) ... */ }
-    public function register($data) { /* ... (kode dari sebelumnya) ... */ }
-    public function registerDokter($data) { /* ... (kode dari sebelumnya) ... */ }
-    public function emailExists($email) { /* ... (kode dari sebelumnya) ... */ }
-    public function updateProfile($data) { /* ... (kode dari sebelumnya) ... */ }
-    private function getDynamicResult($stmt) { /* ... (kode dari sebelumnya) ... */ }
-    // --- Akhir metode yang sudah ada ---
 
     /**
-     * [BARU] Membuat token reset password untuk pengguna berdasarkan email.
-     * @param string $email Email pengguna yang meminta reset.
-     * @return string|false Token yang dihasilkan jika email ditemukan, atau false jika tidak.
+     * Memproses login pengguna dengan return value yang lebih spesifik.
+     * @return array|string Data pengguna jika berhasil, atau string error jika gagal.
      */
-    public function generateResetToken($email) {
-        // Query untuk memperbarui token dan waktu kedaluwarsanya
-        $query = "UPDATE " . $this->table_name . " 
-                  SET reset_token = ?, reset_token_expires_at = ? 
-                  WHERE email = ?";
-        
+    public function login($username, $password, $id_peran) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
         try {
-            // Membuat token acak yang aman
-            $token = bin2hex(random_bytes(32));
-            // Mengatur waktu kedaluwarsa (misalnya, 1 jam dari sekarang)
-            $expiry = date('Y-m-d H:i:s', strtotime('+1 hour'));
-
             $stmt = $this->conn->prepare($query);
-            $stmt->bind_param("sss", $token, $expiry, $email);
+            $stmt->bind_param("ssi", $username, $username, $id_peran);
             $stmt->execute();
-
-            // Cek apakah ada baris yang terpengaruh (artinya email ditemukan dan di-update)
-            if ($stmt->affected_rows > 0) {
-                return $token;
-            }
-            // Jika tidak ada baris yang terpengaruh, berarti email tidak ada di database
-            return false;
-
-        } catch (Exception $e) {
-            error_log("Error di User->generateResetToken(): " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * [BARU] Memvalidasi token reset password.
-     * Memeriksa apakah token ada dan belum kedaluwarsa.
-     * @param string $token Token yang akan divalidasi.
-     * @return bool True jika token valid, false jika tidak.
-     */
-    public function validateResetToken($token) {
-        $query = "SELECT id_pengguna FROM " . $this->table_name . " 
-                  WHERE reset_token = ? AND reset_token_expires_at > NOW()";
-        
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->bind_param("s", $token);
-            $stmt->execute();
-            $stmt->store_result();
-
-            return $stmt->num_rows > 0;
-
-        } catch (Exception $e) {
-            error_log("Error di User->validateResetToken(): " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * [BARU] Mengatur ulang password pengguna menggunakan token yang valid.
-     * @param string $token Token reset yang valid.
-     * @param string $newPassword Password baru yang dimasukkan pengguna.
-     * @return bool True jika password berhasil di-reset, false jika gagal.
-     */
-    public function resetPassword($token, $newPassword) {
-        // Query untuk memperbarui password dan menghapus token
-        $query = "UPDATE " . $this->table_name . " 
-                  SET password = ?, reset_token = NULL, reset_token_expires_at = NULL 
-                  WHERE reset_token = ?";
-        
-        try {
-            $password_hash = password_hash($newPassword, PASSWORD_BCRYPT);
-            $stmt = $this->conn->prepare($query);
-            $stmt->bind_param("ss", $password_hash, $token);
             
-            return $stmt->execute();
+            $result = $this->getDynamicResult($stmt);
+            $stmt->close();
+            
+            if (count($result) === 1) {
+                // Pengguna dan peran cocok, sekarang verifikasi password
+                $user = $result[0];
+                if (password_verify($password, $user['password'])) {
+                    return $user; // SUKSES: Kembalikan data pengguna
+                } else {
+                    return 'WRONG_PASSWORD'; // GAGAL: Password salah
+                }
+            } else {
+                return 'USER_NOT_FOUND'; // GAGAL: Kombinasi user & peran tidak ditemukan
+            }
 
         } catch (Exception $e) {
-            error_log("Error di User->resetPassword(): " . $e->getMessage());
-            return false;
+            error_log("Error di User->login(): " . $e->getMessage());
+            return 'DB_ERROR'; // GAGAL: Error database
         }
+    }
+    
+    // ... (Metode lain seperti register, updateProfile, dll. tetap sama) ...
+    
+    public function emailExists($email) { /* ... */ }
+    public function register($data) { /* ... */ }
+    public function registerDokter($data) { /* ... */ }
+    public function updateProfile($data) { /* ... */ }
+    public function generateResetToken($email) { /* ... */ }
+    public function validateResetToken($token) { /* ... */ }
+    public function resetPassword($token, $newPassword) { /* ... */ }
+
+    private function getDynamicResult($stmt) {
+        $result = [];
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $meta = $stmt->result_metadata();
+            $params = [];
+            while ($field = $meta->fetch_field()) {
+                $params[] = &$row[$field->name];
+            }
+            call_user_func_array([$stmt, 'bind_result'], $params);
+            while ($stmt->fetch()) {
+                $c = [];
+                foreach ($row as $key => $val) {
+                    $c[$key] = $val;
+                }
+                $result[] = $c;
+            }
+        }
+        return $result;
     }
 }
