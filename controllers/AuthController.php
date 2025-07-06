@@ -13,7 +13,7 @@ class AuthController {
 
     // Tambahkan method autentikasi di sini
 
-    public function register_dokter($data) {
+    public function register_dokter($data = null) {
         // TODO: Implementasi logika pendaftaran dokter di sini
         // Contoh: simpan data dokter ke database
         return 'Method register_dokter berhasil dipanggil.';
