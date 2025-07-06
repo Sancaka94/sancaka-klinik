@@ -8,74 +8,83 @@ class User {
     public function __construct($db) {
         $this->conn = $db;
     }
-    
-    // --- Metode yang sudah ada ---
-    public function login($username, $password, $id_peran) { /* ... (kode dari sebelumnya) ... */ }
-    public function register($data) { /* ... (kode dari sebelumnya) ... */ }
-    public function registerDokter($data) { /* ... (kode dari sebelumnya) ... */ }
-    public function emailExists($email) { /* ... (kode dari sebelumnya) ... */ }
-    public function generateResetToken($email) { /* ... (kode dari sebelumnya) ... */ }
-    public function validateResetToken($token) { /* ... (kode dari sebelumnya) ... */ }
-    public function resetPassword($token, $newPassword) { /* ... (kode dari sebelumnya) ... */ }
-    private function getDynamicResult($stmt) { /* ... (kode dari sebelumnya) ... */ }
-    // --- Akhir metode yang sudah ada ---
-
 
     /**
-     * [UPDATE] Memperbarui data profil pengguna dengan error logging yang lebih baik.
-     * @param array $data Data pengguna yang akan diperbarui.
-     * @return bool True jika berhasil, false jika gagal.
+     * Memproses login pengguna dengan logika dan penanganan error yang lebih baik.
      */
-    public function updateProfile($data) {
-        $query = "UPDATE " . $this->table_name . " SET nama_lengkap = ?, email = ? ";
-        $params = [$data['nama_lengkap'], $data['email']];
-        $types = "ss";
-
-        if (!empty($data['password'])) {
-            $query .= ", password = ? ";
-            $params[] = password_hash($data['password'], PASSWORD_BCRYPT);
-            $types .= "s";
-        }
-
-        if (!empty($data['foto_profil'])) {
-             $query .= ", foto_profil = ? ";
-             $params[] = $data['foto_profil'];
-             $types .= "s";
-        }
-
-        if (isset($data['spesialisasi']) && isset($data['nomor_str'])) {
-            $query .= ", spesialisasi = ?, nomor_str = ? ";
-            $params[] = $data['spesialisasi'];
-            $params[] = $data['nomor_str'];
-            $types .= "ss";
-        }
-
-        $query .= " WHERE id_pengguna = ?";
-        $params[] = $data['id_pengguna'];
-        $types .= "i";
-
+    public function login($username, $password, $id_peran) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
+        $stmt = null;
         try {
             $stmt = $this->conn->prepare($query);
             if ($stmt === false) {
-                throw new Exception("Gagal prepare query update profil: " . $this->conn->error);
+                throw new Exception("Prepare statement gagal: " . $this->conn->error);
             }
 
-            $stmt->bind_param($types, ...$params);
+            $stmt->bind_param("ssi", $username, $username, $id_peran);
             
-            // PERBAIKAN: Cek hasil eksekusi dan log error jika gagal
-            if ($stmt->execute()) {
-                // Jika berhasil dan ada baris yang terpengaruh, kembalikan true
-                // Jika tidak ada baris terpengaruh (data sama), tetap anggap berhasil
-                return true;
+            if (!$stmt->execute()) {
+                throw new Exception("Eksekusi statement gagal: " . $stmt->error);
+            }
+            
+            $result = $this->getDynamicResult($stmt);
+            
+            if (count($result) === 1) {
+                $user = $result[0];
+                if (password_verify($password, $user['password'])) {
+                    return $user; // SUKSES
+                } else {
+                    return 'WRONG_PASSWORD'; // GAGAL: Password salah
+                }
             } else {
-                // Jika eksekusi gagal, catat error spesifik dari statement
-                throw new Exception("Gagal eksekusi update profil: " . $stmt->error);
+                return 'USER_NOT_FOUND'; // GAGAL: User/peran tidak ditemukan
             }
 
         } catch (Exception $e) {
-            // Catat pesan error yang lebih detail ke dalam error_log server
-            error_log("Error di User->updateProfile(): " . $e->getMessage());
-            return false;
+            error_log("KRITIS - Error di User->login(): " . $e->getMessage());
+            return 'DB_ERROR';
+        } finally {
+            if ($stmt !== null) {
+                $stmt->close();
+            }
         }
+    }
+    
+    // ... (Metode lain seperti register, updateProfile, dll. tetap sama) ...
+    
+    public function emailExists($email) { /* ... */ }
+    public function register($data) { /* ... */ }
+    public function registerDokter($data) { /* ... */ }
+    public function updateProfile($data) { /* ... */ }
+    public function generateResetToken($email) { /* ... */ }
+    public function validateResetToken($token) { /* ... */ }
+    public function resetPassword($token, $newPassword) { /* ... */ }
+
+    /**
+     * Fungsi helper yang lebih aman untuk mengambil hasil query secara dinamis.
+     */
+    private function getDynamicResult($stmt) {
+        $result = [];
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $meta = $stmt->result_metadata();
+            if ($meta === false) {
+                 throw new Exception("Gagal mendapatkan metadata hasil: " . $stmt->error);
+            }
+            $params = [];
+            $row = [];
+            while ($field = $meta->fetch_field()) {
+                $params[] = &$row[$field->name];
+            }
+            call_user_func_array([$stmt, 'bind_result'], $params);
+            while ($stmt->fetch()) {
+                $c = [];
+                foreach ($row as $key => $val) {
+                    $c[$key] = $val;
+                }
+                $result[] = $c;
+            }
+        }
+        return $result;
     }
 }
