@@ -18,22 +18,26 @@ class AuthController {
     }
 
     /**
-     * [DEBUGGING] Memproses permintaan lupa password dengan output debug.
+     * [DEEPER DEBUGGING] Memproses permintaan lupa password dengan output yang lebih detail.
      */
     public function send_reset_link() {
-        // Hapus atau beri komentar pada pengecekan ini untuk sementara
-        // if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        //     header("Location: ?url=auth/forgot_password");
-        //     exit;
-        // }
-
-        echo "<b>DEBUGGING MODE AKTIF</b><br><hr>";
+        echo "<b>DEBUGGING MODE AKTIF (LEVEL 2)</b><br><hr>";
         echo "DEBUG: Masuk ke metode send_reset_link.<br>";
+
+        // PERBAIKAN: Cetak metode request dan seluruh isi $_POST
+        echo "DEBUG: Metode Request Server: <b>" . $_SERVER['REQUEST_METHOD'] . "</b><br>";
+        echo "DEBUG: Isi dari \$_POST:<br>";
+        echo "<pre>";
+        print_r($_POST);
+        echo "</pre>";
+        echo "<hr>";
 
         $email = $_POST['email'] ?? '';
         if (empty($email)) {
-            die("DEBUG: GAGAL - Email tidak diterima dari form.");
+            die("<b>ANALISIS:</b> Variabel \$_POST['email'] kosong atau tidak ada. Proses dihentikan.");
         }
+        
+        // Kode di bawah ini hanya akan berjalan jika email diterima
         echo "DEBUG: Email yang diterima dari form: <b>" . htmlspecialchars($email) . "</b><br>";
 
         $userModel = new User($this->conn);
@@ -54,17 +58,11 @@ class AuthController {
             $waLink = "https://wa.me/" . $adminWhatsApp . "?text=" . urlencode($message);
 
             echo "DEBUG: Link WhatsApp yang akan diarahkan: <a href='" . $waLink . "'>" . $waLink . "</a><br>";
-            echo "DEBUG: Proses selesai. Jika ini bukan mode debug, Anda akan diarahkan ke WhatsApp.";
-
-            // Hentikan script di sini agar kita bisa melihat output debug
+            echo "DEBUG: Proses selesai.";
             die(); 
-            
-            // Redirect yang asli (saat ini dinonaktifkan)
-            // header("Location: " . $waLink);
 
         } else {
-            // Jika email tidak ditemukan
-            die("DEBUG: GAGAL - Email '" . htmlspecialchars($email) . "' tidak ditemukan di database. Fungsi generateResetToken() di User Model mengembalikan false.");
+            die("DEBUG: GAGAL - Email '" . htmlspecialchars($email) . "' tidak ditemukan di database.");
         }
         exit;
     }
