@@ -7,7 +7,7 @@ class HomeController {
      */
     public function index() {
         // [DIPERBAIKI] Path disesuaikan dengan struktur folder Anda.
-        $view_file = __DIR__ . '/../views/home/index.php';
+        $view_file = __DIR__ . '/../views/home.php';
 
         if (file_exists($view_file)) {
             // Jika file ditemukan, muat halamannya.
