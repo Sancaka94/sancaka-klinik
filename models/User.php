@@ -1,6 +1,6 @@
 <?php
 // File: models/User.php
-// VERSI DEBUGGING UNTUK MENAMPILKAN ERROR ASLI
+// VERSI FINAL SETELAH DEBUGGING
 
 class User {
     private $conn;
@@ -12,11 +12,12 @@ class User {
 
     /**
      * Fungsi untuk memverifikasi login pengguna.
-     * [MODIFIKASI DEBUG] Menampilkan error database secara langsung.
+     * [FIXED] Kolom 'foto' dihapus dari query login awal.
      */
     public function login($username, $password, $id_peran) {
         try {
-            $query = "SELECT id_pengguna, nama_lengkap, username, email, id_peran, password, foto 
+            // Query hanya mengambil data yang esensial untuk login dan session awal
+            $query = "SELECT id_pengguna, nama_lengkap, username, email, id_peran, password 
                       FROM " . $this->table_name . " 
                       WHERE (username = :username OR email = :email) AND id_peran = :id_peran 
                       LIMIT 1";
@@ -30,6 +31,7 @@ class User {
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
                 if (password_verify($password, $user['password'])) {
                     unset($user['password']);
+                    // Data foto akan diambil nanti di halaman profil/dashboard jika perlu
                     return $user;
                 }
                 return 'WRONG_PASSWORD';
@@ -37,12 +39,15 @@ class User {
             return 'USER_NOT_FOUND';
 
         } catch (PDOException $e) {
-            // [MODIFIKASI DEBUG] Hentikan eksekusi dan tampilkan pesan error asli dari database
-            die("DATABASE QUERY ERROR: " . $e->getMessage());
+            // Mengembalikan ke mode penanganan error yang aman
+            error_log("KRITIS - Error di User->login(): " . $e->getMessage());
+            return 'DB_ERROR';
         }
     }
 
-    // --- Method lain tetap sama ---
+    /**
+     * Menemukan pengguna berdasarkan ID.
+     */
     public function find($id_pengguna) {
         try {
             $query = "SELECT * FROM " . $this->table_name . " WHERE id_pengguna = :id_pengguna LIMIT 1";
@@ -70,12 +75,12 @@ class User {
                 return false; // Email sudah digunakan
             }
 
+            // [FIXED] Pastikan nama kolom 'foto' di sini sesuai dengan tabel Anda. Jika tidak ada, hapus baris 'foto = :foto'.
             $query = "UPDATE " . $this->table_name . " 
                       SET nama_lengkap = :nama_lengkap, 
                           email = :email, 
                           no_telepon = :no_telepon, 
                           alamat = :alamat, 
-                          foto = :foto,
                           spesialisasi = :spesialisasi,
                           nomor_str = :nomor_str,
                           tanggal_lahir = :tanggal_lahir,
@@ -83,13 +88,14 @@ class User {
                           no_ktp = :no_ktp,
                           no_bpjs = :no_bpjs
                       WHERE id_pengguna = :id_pengguna";
+            // Jika Anda punya kolom foto, tambahkan lagi baris ini di dalam SET: foto = :foto,
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':nama_lengkap', $data['nama_lengkap']);
             $stmt->bindParam(':email', $data['email']);
             $stmt->bindParam(':no_telepon', $data['no_telepon']);
             $stmt->bindParam(':alamat', $data['alamat']);
-            $stmt->bindParam(':foto', $data['foto']);
+            // Jika Anda punya kolom foto, aktifkan baris ini: $stmt->bindParam(':foto', $data['foto']);
             $stmt->bindParam(':spesialisasi', $data['spesialisasi']);
             $stmt->bindParam(':nomor_str', $data['nomor_str']);
             $stmt->bindParam(':tanggal_lahir', $data['tanggal_lahir']);
@@ -149,7 +155,7 @@ class User {
                 return false; // Pengguna sudah ada
             }
 
-            $query = "INSERT INTO " . $this->table_name . " (nama_lengkap, username, email, password, id_peran, foto, spesialisasi, nomor_str, tanggal_lahir, jenis_kelamin, no_ktp, no_bpjs) VALUES (:nama_lengkap, :username, :email, :password, :id_peran, :foto, :spesialisasi, :nomor_str, :tanggal_lahir, :jenis_kelamin, :no_ktp, :no_bpjs)";
+            $query = "INSERT INTO " . $this->table_name . " (nama_lengkap, username, email, password, id_peran, spesialisasi, nomor_str, tanggal_lahir, jenis_kelamin, no_ktp, no_bpjs) VALUES (:nama_lengkap, :username, :email, :password, :id_peran, :spesialisasi, :nomor_str, :tanggal_lahir, :jenis_kelamin, :no_ktp, :no_bpjs)";
             $stmt = $this->conn->prepare($query);
 
             $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
@@ -159,7 +165,6 @@ class User {
             $stmt->bindParam(':email', $data['email']);
             $stmt->bindParam(':password', $password_hash);
             $stmt->bindParam(':id_peran', $data['id_peran'], PDO::PARAM_INT);
-            $stmt->bindParam(':foto', $data['foto']);
             $stmt->bindParam(':spesialisasi', $data['spesialisasi']);
             $stmt->bindParam(':nomor_str', $data['nomor_str']);
             $stmt->bindParam(':tanggal_lahir', $data['tanggal_lahir']);
