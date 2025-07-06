@@ -1,157 +1,133 @@
-<?php 
-// File: views/auth/login.php
-// Menggunakan layout untuk halaman publik
-require_once __DIR__ . '/../layouts/header_public.php'; 
-?>
+<?php
+// File: models/User.php
 
-<style>
-    .login-container {
-        display: flex;
-        min-height: 100vh;
-        width: 100%;
-    }
-    .login-form-section {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 40px;
-    }
-    .login-branding-section {
-        flex: 1;
-        background: linear-gradient(135deg, rgba(0, 123, 255, 0.85), rgba(0, 86, 179, 0.9)), url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
-        background-size: cover;
-        background-position: center;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        text-align: center;
-        padding: 40px;
-    }
-    .login-branding-section h1 {
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 15px;
-    }
-    .login-branding-section p {
-        font-size: 1.1rem;
-        max-width: 400px;
-        opacity: 0.9;
-    }
-    .form-wrapper {
-        width: 100%;
-        max-width: 450px;
-    }
-    .form-wrapper h2 {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-        color: #333;
-    }
-    .form-wrapper .text-muted {
-        margin-bottom: 30px;
-    }
-    .form-floating label {
-        color: #6c757d;
-    }
-    .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-        padding: 12px;
-        font-weight: 600;
-    }
-    .registration-links {
-        margin-top: 25px;
-        text-align: center;
-        font-size: 0.9em;
-    }
-    .registration-links a {
-        color: #007bff;
-        text-decoration: none;
-        font-weight: 500;
-    }
-    .registration-links a:hover {
-        text-decoration: underline;
-    }
-    .or-divider {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        color: #6c757d;
-        margin: 15px 0;
-    }
-    .or-divider::before, .or-divider::after {
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid #dee2e6;
-    }
-    .or-divider:not(:empty)::before {
-        margin-right: .25em;
-    }
-    .or-divider:not(:empty)::after {
-        margin-left: .25em;
+class User {
+    private $conn;
+    private $table_name = "pengguna";
+
+    public function __construct($db) {
+        $this->conn = $db;
     }
 
-    @media (max-width: 992px) {
-        .login-branding-section {
-            display: none;
-        }
-        .login-form-section {
-            background-color: #f4f7f9;
+    /**
+     * Memproses login pengguna dengan logging tambahan untuk debugging.
+     */
+    public function login($username, $password, $id_peran) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("ssi", $username, $username, $id_peran);
+            $stmt->execute();
+            
+            $result = $this->getDynamicResult($stmt);
+            
+            if (count($result) === 1) {
+                // Pengguna ditemukan, sekarang verifikasi password
+                $user = $result[0];
+                if (password_verify($password, $user['password'])) {
+                    // Password cocok, login berhasil
+                    $stmt->close();
+                    error_log("DEBUG: Login SUKSES untuk user: " . $username);
+                    return $user;
+                } else {
+                    // Pengguna ditemukan, tetapi password salah
+                    $stmt->close();
+                    error_log("DEBUG: Login GAGAL - Password salah untuk user: " . $username);
+                    return false;
+                }
+            } else {
+                // Pengguna dengan username/email dan peran tersebut tidak ditemukan
+                $stmt->close();
+                error_log("DEBUG: Login GAGAL - User tidak ditemukan dengan username/email: '" . $username . "' dan id_peran: '" . $id_peran . "'");
+                return false;
+            }
+
+        } catch (Exception $e) {
+            error_log("Error di User->login(): " . $e->getMessage());
+            return false;
         }
     }
-</style>
+    
+    /**
+     * Memeriksa apakah sebuah email sudah terdaftar.
+     */
+    public function emailExists($email) {
+        $query = "SELECT id_pengguna FROM " . $this->table_name . " WHERE email = ? LIMIT 1";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $stmt->store_result();
+            $num_rows = $stmt->num_rows;
+            $stmt->close();
+            return $num_rows > 0;
+        } catch (Exception $e) {
+            error_log("Error di User->emailExists(): " . $e->getMessage());
+            return false;
+        }
+    }
 
-<div class="login-container">
-    <div class="login-branding-section">
-        <i class="bi bi-heart-pulse-fill" style="font-size: 4rem; margin-bottom: 20px;"></i>
-        <h1>Selamat Datang Kembali</h1>
-        <p>Akses sistem manajemen klinik terpadu untuk memberikan pelayanan terbaik bagi pasien Anda.</p>
-    </div>
+    // --- Metode register dan registerDokter tetap sama karena tidak mengambil data ---
+    public function register($data) {
+        $query = "INSERT INTO " . $this->table_name . " (username, email, password, id_peran, nama_lengkap) VALUES (?, ?, ?, 4, ?)";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
+            $username = $data['email'];
+            $stmt->bind_param("ssss", $username, $data['email'], $password_hash, $data['nama_lengkap']);
+            return $stmt->execute();
+        } catch (Exception $e) {
+            error_log("Error di User->register(): " . $e->getMessage());
+            return false;
+        }
+    }
 
-    <div class="login-form-section">
-        <div class="form-wrapper">
-            <h2>Login Akun</h2>
-            <p class="text-muted">Silakan masukkan kredensial Anda untuk melanjutkan.</p>
+    public function registerDokter($data) {
+        $query = "INSERT INTO " . $this->table_name . " (username, email, password, id_peran, nama_lengkap, spesialisasi, nomor_str, foto_profil) 
+                  VALUES (?, ?, ?, 3, ?, ?, ?, ?)";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
+            $username = $data['email'];
+            $stmt->bind_param(
+                "sssssss",
+                $username,
+                $data['email'],
+                $password_hash,
+                $data['nama_lengkap'],
+                $data['spesialisasi'],
+                $data['nomor_str'],
+                $data['foto_profil']
+            );
+            return $stmt->execute();
+        } catch (Exception $e) {
+            error_log("Error di User->registerDokter(): " . $e->getMessage());
+            return false;
+        }
+    }
 
-            <form action="?url=auth/authenticate" method="POST">
-                <div class="form-floating mb-3">
-                    <select class="form-select rounded-3" id="id_peran" name="id_peran" required>
-                        <option value="" disabled selected>-- Pilih peran Anda --</option>
-                        <option value="4">Saya adalah Pasien</option>
-                        <option value="3">Saya adalah Dokter</option>
-                        <option value="2">Saya adalah Admin</option>
-                        <option value="5">Saya adalah Owner Klinik</option>
-                        <option value="1">Saya adalah Super Admin</option>
-                    </select>
-                    <label for="id_peran">Anda login sebagai...</label>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <input type="text" class="form-control rounded-3" id="username" name="username" placeholder="Email atau Username" required>
-                    <label for="username">Email atau Username</label>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <input type="password" class="form-control rounded-3" id="password" name="password" placeholder="Password" required>
-                    <label for="password">Password</label>
-                </div>
-
-                <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" type="submit">Login</button>
-            </form>
-
-            <div class="registration-links">
-                <p class="mb-1">Belum punya akun pasien? <a href="?url=auth/register">Daftar di sini</a></p>
-                <div class="or-divider">atau</div>
-                <p class="mb-0">Mitra dokter? <a href="?url=auth/register_dokter">Daftar sebagai Dokter</a></p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<?php 
-// Memanggil footer layout publik
-require_once __DIR__ . '/../layouts/footer_public.php'; 
-?>
+    /**
+     * Fungsi helper pribadi untuk mengambil hasil query secara dinamis
+     * tanpa menggunakan get_result().
+     */
+    private function getDynamicResult($stmt) {
+        $result = [];
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $meta = $stmt->result_metadata();
+            $params = [];
+            while ($field = $meta->fetch_field()) {
+                $params[] = &$row[$field->name];
+            }
+            call_user_func_array([$stmt, 'bind_result'], $params);
+            while ($stmt->fetch()) {
+                $c = [];
+                foreach ($row as $key => $val) {
+                    $c[$key] = $val;
+                }
+                $result[] = $c;
+            }
+        }
+        return $result;
+    }
+}
