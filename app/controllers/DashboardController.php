@@ -16,7 +16,7 @@ require_once BASE_PATH . '/../models/User.php';
 require_once BASE_PATH . '/../models/RekamMedis.php';
 require_once BASE_PATH . '/../models/JanjiTemu.php';
 // [BARU] Memuat model Notifikasi
-require_once BASE_PATH . . '/../models/Notifikasi.php';
+require_once BASE_PATH . '/../models/Notifikasi.php';
 
 class DashboardController {
 
@@ -83,7 +83,7 @@ class DashboardController {
         $notifikasi_list = $this->notifikasiModel->getByUserId($id_pengguna);
         
         // Mengirim semua data ke view
-        require_once BASE_PATH . . '/../views/dashboard/pasien.php';
+        require_once BASE_PATH . '/../views/dashboard/pasien.php';
     }
 
     /**
@@ -115,7 +115,7 @@ class DashboardController {
         // $total_pasien = $this->userModel->countByRole(4); 
         // $janji_hari_ini = $this->janjiTemuModel->countJanjiByDate(date('Y-m-d'));
 
-        require_once BASE_PATH . . '/../views/dashboard/admin.php';
+        require_once BASE_PATH . '/../views/dashboard/admin.php';
     }
 
     /**
@@ -125,7 +125,7 @@ class DashboardController {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 1) {
             $this->redirectToLogin("Akses ditolak. Silakan login sebagai Superadmin.");
         }
-        require_once __DIR__ . '/../views/dashboard/superadmin.php';
+        require_once BASE_PATH . '/../views/dashboard/superadmin.php';
     }
     
     /**
@@ -136,7 +136,7 @@ class DashboardController {
             $this->redirectToLogin("Akses ditolak. Silakan login sebagai Owner.");
         }
         // Owner bisa melihat dashboard yang sama dengan Superadmin
-        require_once __DIR__ . '/../views/dashboard/superadmin.php';
+        require_once BASE_PATH . '/../views/dashboard/superadmin.php';
     }
 
     /**
@@ -147,7 +147,7 @@ class DashboardController {
             $this->redirectToLogin("Akses ditolak. Silakan login sebagai Staf.");
         }
         // Staf bisa melihat dashboard yang sama dengan Admin
-        require_once __DIR__ . '/../views/dashboard/admin.php';
+        require_once BASE_PATH . '/../views/dashboard/admin.php';
     }
 
     private function isLoggedIn() {
