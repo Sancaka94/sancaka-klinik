@@ -15,9 +15,12 @@ class AuthController {
      * Membuat koneksi database sekali saat controller dibuat.
      */
     public function __construct() {
-        // Membuat objek database dan mendapatkan koneksi
+        // Membuat objek database
         $database = new Database(); // Asumsi Anda punya class Database di config/database.php
-        $this->conn = $database->getConnection();
+        
+        // PERBAIKAN: Langsung akses properti publik 'conn' dari objek Database,
+        // bukan memanggil metode getConnection() yang tidak ada.
+        $this->conn = $database->conn; 
     }
 
     /**
@@ -31,7 +34,7 @@ class AuthController {
      * Memproses otentikasi pengguna.
      */
     public function authenticate() {
-        // PERBAIKAN: Gunakan koneksi yang sudah ada ($this->conn) untuk membuat User model
+        // Gunakan koneksi yang sudah ada ($this->conn) untuk membuat User model
         $userModel = new User($this->conn);
         
         $username = $_POST['username'] ?? '';
@@ -86,7 +89,7 @@ class AuthController {
      * Memproses data dari form pendaftaran pasien.
      */
     public function processRegister() {
-        // PERBAIKAN: Anda juga perlu menerapkan koneksi DB di sini
+        // Anda juga perlu menerapkan koneksi DB di sini
         $userModel = new User($this->conn);
         // ... (Logika untuk registrasi pasien) ...
     }
@@ -107,7 +110,7 @@ class AuthController {
             exit;
         }
 
-        // PERBAIKAN: Gunakan koneksi yang sudah ada ($this->conn) untuk membuat User model
+        // Gunakan koneksi yang sudah ada ($this->conn) untuk membuat User model
         $userModel = new User($this->conn);
 
         // Cek dulu apakah email sudah ada
