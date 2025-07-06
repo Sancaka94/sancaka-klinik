@@ -1,5 +1,6 @@
 <?php
 // File: config/database.php
+// Ini Fix
 
 class Database {
     // Properti untuk menyimpan detail koneksi database Anda
