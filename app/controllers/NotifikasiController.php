@@ -6,8 +6,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/Notifikasi.php';
+require_once BASE_PATH . '/../config/database.php';
+require_once BASE_PATH . '/../models/Notifikasi.php';
 
 class NotifikasiController {
     private $conn;
@@ -32,7 +32,7 @@ class NotifikasiController {
         $notifikasi = $this->notifikasiModel->getByUserId($id_pengguna);
 
         // Muat halaman view untuk menampilkan notifikasi
-        require_once __DIR__ . '/../views/notifikasi/index.php';
+        require_once BASE_PATH . '/../views/notifikasi/index.php';
     }
 
     /**
