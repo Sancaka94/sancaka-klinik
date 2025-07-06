@@ -1,1 +1,0 @@
-<footer><p>&copy; 2025 Klinik</p></footer></body></html>
