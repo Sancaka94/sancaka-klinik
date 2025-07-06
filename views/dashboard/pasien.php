@@ -2,30 +2,16 @@
 // File: views/dashboard/pasien.php
 
 // Memanggil header standar aplikasi Anda
-// Asumsi header.php sudah memuat semua file CSS AdminLTE, Bootstrap, dan Font Awesome dari lokal
 require_once __DIR__ . '/../layouts/header.php';
 
 // --- DATA DARI CONTROLLER ---
-// Di dalam DashboardController, Anda perlu mengambil data ini dari database dan mengirimkannya ke view ini.
-// Contoh:
- $user = $_SESSION['user'];
- $jumlah_kunjungan = $this->rekamMedisModel->countKunjungan($user['id_pengguna']);
- $janji_aktif = $this->janjiTemuModel->countJanjiAktif($user['id_pengguna']);
- $riwayat_rekam_medis = $this->rekamMedisModel->getRiwayat($user['id_pengguna']);
- $janji_temu = $this->janjiTemuModel->getJanji($user['id_pengguna']);
-
-// Placeholder data untuk demonstrasi
-$user = $_SESSION['user'] ?? ['nama_lengkap' => 'Nama Pasien', 'foto' => null];
-$jumlah_kunjungan = 12;
-$janji_aktif = 2;
-$riwayat_rekam_medis = [
-    ['id_rekam_medis' => 101, 'tanggal' => '2025-06-20', 'dokter' => 'Dr. Budi Santoso', 'diagnosa' => 'Flu dan Batuk', 'tindakan' => 'Pemeriksaan Umum'],
-    ['id_rekam_medis' => 95, 'tanggal' => '2025-05-15', 'dokter' => 'Dr. Anisa Wijaya', 'diagnosa' => 'Sakit Kepala', 'tindakan' => 'Konsultasi']
-];
-$janji_temu = [
-    ['id_janji' => 205, 'tanggal' => '2025-07-10', 'waktu' => '10:00', 'dokter' => 'Dr. Anisa Wijaya', 'status' => 'Dikonfirmasi'],
-    ['id_janji' => 208, 'tanggal' => '2025-07-18', 'waktu' => '14:30', 'dokter' => 'Dr. Budi Santoso', 'status' => 'Menunggu Konfirmasi']
-];
+// Semua variabel di bawah ini sudah disiapkan oleh DashboardController.php
+// Tidak perlu memanggil fungsi model lagi di sini.
+// $user = $_SESSION['user'];
+// $jumlah_kunjungan
+// $janji_aktif
+// $riwayat_rekam_medis
+// $janji_temu
 ?>
 
 <!-- Content Wrapper. Contains page content -->
@@ -36,15 +22,15 @@ $janji_temu = [
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <h1 class="m-0">Dashboard Pasien</h1>
-                </div><!-- /.col -->
+                </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="?url=dashboard">Home</a></li>
                         <li class="breadcrumb-item active">Dashboard</li>
                     </ol>
-                </div><!-- /.col -->
-            </div><!-- /.row -->
-        </div><!-- /.container-fluid -->
+                </div>
+            </div>
+        </div>
     </div>
     <!-- /.content-header -->
 
@@ -58,7 +44,7 @@ $janji_temu = [
                         <span class="info-box-icon bg-info elevation-1"><i class="fas fa-file-medical-alt"></i></span>
                         <div class="info-box-content">
                             <span class="info-box-text">Total Kunjungan</span>
-                            <span class="info-box-number"><?= $jumlah_kunjungan ?></span>
+                            <span class="info-box-number"><?= htmlspecialchars($jumlah_kunjungan ?? 0) ?></span>
                         </div>
                     </div>
                 </div>
@@ -67,7 +53,7 @@ $janji_temu = [
                         <span class="info-box-icon bg-success elevation-1"><i class="fas fa-calendar-check"></i></span>
                         <div class="info-box-content">
                             <span class="info-box-text">Janji Temu Aktif</span>
-                            <span class="info-box-number"><?= $janji_aktif ?></span>
+                            <span class="info-box-number"><?= htmlspecialchars($janji_aktif ?? 0) ?></span>
                         </div>
                     </div>
                 </div>
@@ -99,20 +85,21 @@ $janji_temu = [
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($riwayat_rekam_medis as $riwayat): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($riwayat['tanggal']) ?></td>
-                                        <td><?= htmlspecialchars($riwayat['dokter']) ?></td>
-                                        <td><?= htmlspecialchars($riwayat['diagnosa']) ?></td>
-                                        <td><?= htmlspecialchars($riwayat['tindakan']) ?></td>
-                                        <td>
-                                            <a href="?url=rekam_medis/detail/<?= $riwayat['id_rekam_medis'] ?>" class="btn btn-info btn-sm" title="Lihat Detail">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                    <?php if (empty($riwayat_rekam_medis)): ?>
+                                    <?php if (!empty($riwayat_rekam_medis)): ?>
+                                        <?php foreach ($riwayat_rekam_medis as $riwayat): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($riwayat['tanggal_kunjungan']) ?></td>
+                                            <td><?= htmlspecialchars($riwayat['nama_dokter']) ?></td>
+                                            <td><?= htmlspecialchars($riwayat['diagnosa']) ?></td>
+                                            <td><?= htmlspecialchars($riwayat['tindakan']) ?></td>
+                                            <td>
+                                                <a href="?url=rekam_medis/detail/<?= $riwayat['id_rekam_medis'] ?>" class="btn btn-info btn-sm" title="Lihat Detail">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
                                         <tr><td colspan="5" class="text-center py-4">Belum ada riwayat rekam medis.</td></tr>
                                     <?php endif; ?>
                                 </tbody>
@@ -139,34 +126,35 @@ $janji_temu = [
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($janji_temu as $janji): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($janji['tanggal']) ?></td>
-                                        <td><?= htmlspecialchars($janji['waktu']) ?></td>
-                                        <td><?= htmlspecialchars($janji['dokter']) ?></td>
-                                        <td>
-                                            <?php 
-                                                $status_class = $janji['status'] == 'Dikonfirmasi' ? 'badge bg-success' : 'badge bg-warning';
-                                                echo "<span class='{$status_class}'>" . htmlspecialchars($janji['status']) . "</span>";
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <?php if ($janji['status'] == 'Menunggu Konfirmasi'): ?>
-                                            <a href="?url=janji/edit/<?= $janji['id_janji'] ?>" class="btn btn-secondary btn-sm" title="Ubah Jadwal">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <a href="?url=janji/cancel/<?= $janji['id_janji'] ?>" class="btn btn-danger btn-sm" title="Batalkan Janji" onclick="return confirm('Apakah Anda yakin ingin membatalkan janji temu ini?')">
-                                                <i class="fas fa-times-circle"></i>
-                                            </a>
-                                            <?php else: ?>
-                                            <a href="?url=janji/detail/<?= $janji['id_janji'] ?>" class="btn btn-info btn-sm" title="Lihat Detail">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                    <?php if (empty($janji_temu)): ?>
+                                    <?php if (!empty($janji_temu)): ?>
+                                        <?php foreach ($janji_temu as $janji): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($janji['tanggal_janji']) ?></td>
+                                            <td><?= htmlspecialchars($janji['waktu_janji']) ?></td>
+                                            <td><?= htmlspecialchars($janji['nama_dokter']) ?></td>
+                                            <td>
+                                                <?php 
+                                                    $status_class = $janji['status'] == 'Dikonfirmasi' ? 'badge bg-success' : 'badge bg-warning';
+                                                    echo "<span class='{$status_class}'>" . htmlspecialchars($janji['status']) . "</span>";
+                                                ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($janji['status'] == 'Menunggu Konfirmasi'): ?>
+                                                <a href="?url=janji/edit/<?= $janji['id_janji'] ?>" class="btn btn-secondary btn-sm" title="Ubah Jadwal">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="?url=janji/cancel/<?= $janji['id_janji'] ?>" class="btn btn-danger btn-sm" title="Batalkan Janji" onclick="return confirm('Apakah Anda yakin ingin membatalkan janji temu ini?')">
+                                                    <i class="fas fa-times-circle"></i>
+                                                </a>
+                                                <?php else: ?>
+                                                <a href="?url=janji/detail/<?= $janji['id_janji'] ?>" class="btn btn-info btn-sm" title="Lihat Detail">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
                                         <tr><td colspan="5" class="text-center py-4">Tidak ada janji temu yang akan datang.</td></tr>
                                     <?php endif; ?>
                                 </tbody>
@@ -184,6 +172,5 @@ $janji_temu = [
 
 <?php
 // Memanggil footer standar aplikasi Anda
-// Asumsi footer.php sudah memuat semua file JS jQuery, Bootstrap, dan AdminLTE dari lokal
 require_once __DIR__ . '/../layouts/footer.php';
 ?>
