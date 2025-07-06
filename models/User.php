@@ -9,44 +9,93 @@ class User {
         $this->conn = $db;
     }
 
+    // --- Metode Login & Registrasi ---
+    public function login($username, $password, $id_peran) { /* ... (kode dari sebelumnya) ... */ }
+    public function register($data) { /* ... (kode dari sebelumnya) ... */ }
+    public function registerDokter($data) { /* ... (kode dari sebelumnya) ... */ }
+    public function emailExists($email) { /* ... (kode dari sebelumnya) ... */ }
+    public function updateProfile($data) { /* ... (kode dari sebelumnya) ... */ }
+
+    // --- Metode Lupa Password (LENGKAP) ---
+
     /**
-     * [BARU & LEBIH TANGGUH] Membuat token reset password untuk pengguna.
+     * Membuat token reset password untuk pengguna berdasarkan email.
      */
     public function generateResetToken($email) {
-        // PERBAIKAN: Bersihkan dan normalkan email
         $clean_email = strtolower(trim($email));
-
-        // PERBAIKAN: Gunakan LOWER() dalam query untuk pencarian case-insensitive
-        $query = "UPDATE " . $this->table_name . " 
-                  SET reset_token = ?, reset_token_expires_at = ? 
-                  WHERE LOWER(email) = ?";
-        
+        $query = "UPDATE " . $this->table_name . " SET reset_token = ?, reset_token_expires_at = ? WHERE LOWER(email) = ?";
         try {
             $token = bin2hex(random_bytes(32));
             $expiry = date('Y-m-d H:i:s', strtotime('+1 hour'));
-
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param("sss", $token, $expiry, $clean_email);
             $stmt->execute();
-
             if ($stmt->affected_rows > 0) {
                 return $token;
             }
             return false;
-
         } catch (Exception $e) {
             error_log("Error di User->generateResetToken(): " . $e->getMessage());
             return false;
         }
     }
-    
-    // ... (Semua metode lain seperti login, register, dll. tetap sama) ...
-    public function login($username, $password, $id_peran) { /* ... */ }
-    public function register($data) { /* ... */ }
-    public function registerDokter($data) { /* ... */ }
-    public function emailExists($email) { /* ... */ }
-    public function updateProfile($data) { /* ... */ }
-    public function validateResetToken($token) { /* ... */ }
-    public function resetPassword($token, $newPassword) { /* ... */ }
-    private function getDynamicResult($stmt) { /* ... */ }
+
+    /**
+     * [LENGKAP] Memvalidasi token reset password.
+     */
+    public function validateResetToken($token) {
+        $query = "SELECT id_pengguna FROM " . $this->table_name . " WHERE reset_token = ? AND reset_token_expires_at > NOW()";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("s", $token);
+            $stmt->execute();
+            $stmt->store_result();
+            return $stmt->num_rows > 0;
+        } catch (Exception $e) {
+            error_log("Error di User->validateResetToken(): " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * [LENGKAP] Mengatur ulang password pengguna menggunakan token.
+     */
+    public function resetPassword($token, $newPassword) {
+        $query = "UPDATE " . $this->table_name . " SET password = ?, reset_token = NULL, reset_token_expires_at = NULL WHERE reset_token = ?";
+        try {
+            $password_hash = password_hash($newPassword, PASSWORD_BCRYPT);
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("ss", $password_hash, $token);
+            return $stmt->execute();
+        } catch (Exception $e) {
+            error_log("Error di User->resetPassword(): " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // --- Fungsi Helper ---
+    private function getDynamicResult($stmt) {
+        $result = [];
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $meta = $stmt->result_metadata();
+            if ($meta === false) {
+                 throw new Exception("Gagal mendapatkan metadata hasil: " . $stmt->error);
+            }
+            $params = [];
+            $row = [];
+            while ($field = $meta->fetch_field()) {
+                $params[] = &$row[$field->name];
+            }
+            call_user_func_array([$stmt, 'bind_result'], $params);
+            while ($stmt->fetch()) {
+                $c = [];
+                foreach ($row as $key => $val) {
+                    $c[$key] = $val;
+                }
+                $result[] = $c;
+            }
+        }
+        return $result;
+    }
 }
