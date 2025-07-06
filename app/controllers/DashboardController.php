@@ -100,7 +100,7 @@ class DashboardController {
         // $pasien_hari_ini = $this->janjiTemuModel->countPasienByDokter($id_dokter, date('Y-m-d'));
         // $janji_selesai = $this->janjiTemuModel->countJanjiSelesaiByDokter($id_dokter, date('Y-m-d'));
         
-        require_once BASE_PATH . . '/../views/dashboard/dokter.php';
+        require_once BASE_PATH . '/../views/dashboard/dokter.php';
     }
 
     /**
