@@ -1,86 +1,164 @@
 <?php
-require_once __DIR__ . '/../models/User.php';
-require_once __DIR__ . '/../models/Dokter.php'; // Kita akan butuh model Dokter
-require_once __DIR__ . '/../models/JanjiTemu.php'; // Kita juga butuh model JanjiTemu
+// File: controllers/JanjiTemuController.php
+
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/JanjiTemu.php'; // Model untuk operasi janji temu
+require_once __DIR__ . '/../models/Dokter.php';   // Model untuk mendapatkan daftar dokter
 
 class JanjiTemuController {
+    
+    private $conn;
 
+    /**
+     * Constructor untuk membuat koneksi database sekali.
+     */
     public function __construct() {
+        $database = new Database();
+        $this->conn = $database->conn;
+        
+        // Memulai session di awal agar tersedia untuk semua metode
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
     }
 
     /**
-     * Menampilkan form untuk membuat janji temu baru.
+     * [READ] Menampilkan daftar semua janji temu (untuk admin) 
+     * atau riwayat janji temu (untuk pasien).
      */
-    public function buat() {
-        // 1. Cek apakah pengguna sudah login
-        if (!isset($_SESSION['user'])) {
-            header("Location: ?url=auth/login&error=Anda harus login untuk membuat janji temu.");
-            exit;
-        }
+    public function index() {
+        // Logika untuk menentukan data mana yang akan diambil berdasarkan peran pengguna
+        $janjiTemuModel = new JanjiTemu($this->conn);
+        $user_id = $_SESSION['user']['id_pengguna'] ?? null;
+        $user_role = $_SESSION['user']['id_peran'] ?? null;
 
-        // 2. Dapatkan data pasien yang sedang login
-        $userModel = new User();
-        $id_pengguna = $_SESSION['user']['id_pengguna'];
-        $data_pasien = $userModel->getPatientProfileById($id_pengguna);
-
-        // 3. Cek apakah data pasien ditemukan
-        if (!$data_pasien) {
-            // Ini adalah error yang Anda lihat
-            die("Error: Tidak dapat menemukan data pasien yang terkait dengan akun Anda.");
+        if ($user_role == 4 && $user_id) { // Jika peran adalah Pasien
+            $list_janji = $janjiTemuModel->getByPatientId($user_id);
+        } else if ($user_role == 2 || $user_role == 3) { // Jika peran adalah Admin atau Dokter
+             $list_janji = $janjiTemuModel->getAll();
+        } else {
+            // Jika tidak ada peran yang cocok atau tidak login, tampilkan daftar kosong atau redirect
+            $list_janji = [];
         }
         
-        // 4. Dapatkan daftar dokter yang tersedia
-        $dokterModel = new Dokter();
-        $daftar_dokter = $dokterModel->getAllDokter();
-
-        // 5. Muat halaman view dan kirimkan data yang dibutuhkan
-        require __DIR__ . '/../views/janjitemu/buat.php';
+        // Memuat view yang menampilkan daftar janji temu
+        require_once __DIR__ . '/../views/janjitemu/index.php';
     }
 
     /**
-     * Menyimpan janji temu baru ke database.
+     * [CREATE - Form] Menampilkan halaman form untuk membuat janji temu baru.
      */
-    public function simpan() {
+    public function buat() {
+        // Mengambil daftar dokter untuk ditampilkan di dropdown form
+        $dokterModel = new Dokter($this->conn);
+        $list_dokter = $dokterModel->getAll();
+
+        // Mengirim data daftar dokter ke view
+        require_once __DIR__ . '/../views/janjitemu/buat.php';
+    }
+
+    /**
+     * [CREATE - Process] Menyimpan data janji temu baru dari form ke database.
+     */
+    public function store() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header("Location: ?url=janjitemu/buat");
             exit;
         }
 
-        if (!isset($_SESSION['user'])) {
-            header("Location: ?url=auth/login&error=Sesi Anda telah berakhir.");
+        // Pastikan pasien sudah login
+        if (!isset($_SESSION['user']) || $_SESSION['user']['id_peran'] != 4) {
+            header("Location: ?url=auth/login&error=Anda harus login sebagai pasien untuk membuat janji temu.");
             exit;
         }
 
-        // Kumpulkan data dari form
+        $janjiTemuModel = new JanjiTemu($this->conn);
+
         $data = [
-            'id_pasien' => $_POST['id_pasien'],
-            'id_dokter' => $_POST['id_dokter'],
-            'tanggal_temu' => $_POST['tanggal_temu'],
-            'waktu_temu' => $_POST['waktu_temu'],
-            'keluhan' => $_POST['keluhan'],
-            'status' => 'Dijadwalkan' // Status awal
+            'id_pasien' => $_SESSION['user']['id_pengguna'],
+            'id_dokter' => $_POST['id_dokter'] ?? null,
+            'tanggal_booking' => $_POST['tanggal_booking'] ?? null,
+            'keluhan' => $_POST['keluhan'] ?? ''
         ];
 
-        $janjiTemuModel = new JanjiTemu();
+        if (empty($data['id_dokter']) || empty($data['tanggal_booking'])) {
+            header("Location: ?url=janjitemu/buat&error=Dokter dan tanggal janji harus diisi.");
+            exit;
+        }
 
         if ($janjiTemuModel->create($data)) {
-            // Jika berhasil, alihkan ke halaman daftar janji temu
-            header("Location: ?url=janjitemu/riwayat&status=sukses");
+            header("Location: ?url=dashboard/pasien&status=janjitemu_sukses");
         } else {
-            // Jika gagal, kembali ke form dengan pesan error
             header("Location: ?url=janjitemu/buat&error=Gagal membuat janji temu.");
         }
         exit;
     }
-    
+
     /**
-     * Menampilkan riwayat janji temu pasien.
+     * [UPDATE - Form] Menampilkan halaman form untuk mengedit janji temu.
+     * @param int $id ID dari janji temu yang akan diedit.
      */
-    public function riwayat() {
-        // Logika untuk menampilkan riwayat janji temu bisa ditambahkan di sini
-        echo "Halaman riwayat janji temu.";
+    public function edit($id) {
+        $janjiTemuModel = new JanjiTemu($this->conn);
+        $janji = $janjiTemuModel->getById($id);
+
+        // Jika janji temu tidak ditemukan, redirect atau tampilkan error
+        if (!$janji) {
+            die('Janji temu tidak ditemukan.');
+        }
+
+        // Mengambil daftar dokter untuk dropdown
+        $dokterModel = new Dokter($this->conn);
+        $list_dokter = $dokterModel->getAll();
+
+        // Memuat view form edit dan mengirim data janji temu serta daftar dokter
+        require_once __DIR__ . '/../views/janjitemu/edit.php';
+    }
+
+    /**
+     * [UPDATE - Process] Memperbarui data janji temu di database.
+     */
+    public function update() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: ?url=janjitemu/index"); // Arahkan ke daftar janji
+            exit;
+        }
+
+        $janjiTemuModel = new JanjiTemu($this->conn);
+        
+        $data = [
+            'id' => $_POST['id_janji_temu'] ?? 0,
+            'id_dokter' => $_POST['id_dokter'] ?? null,
+            'tanggal_booking' => $_POST['tanggal_booking'] ?? null,
+            'keluhan' => $_POST['keluhan'] ?? '',
+            'status' => $_POST['status'] ?? 'Direncanakan' // Admin mungkin bisa mengubah status
+        ];
+
+        if ($janjiTemuModel->update($data)) {
+            header("Location: ?url=janjitemu/index&status=update_sukses");
+        } else {
+            header("Location: ?url=janjitemu/edit&id={$data['id']}&error=Gagal memperbarui janji temu.");
+        }
+        exit;
+    }
+
+    /**
+     * [DELETE] Membatalkan atau menghapus janji temu.
+     */
+    public function destroy() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: ?url=janjitemu/index");
+            exit;
+        }
+
+        $id = $_POST['id_janji_temu'] ?? 0;
+        $janjiTemuModel = new JanjiTemu($this->conn);
+
+        if ($janjiTemuModel->delete($id)) {
+            header("Location: ?url=janjitemu/index&status=hapus_sukses");
+        } else {
+            header("Location: ?url=janjitemu/index&error=Gagal menghapus janji temu.");
+        }
+        exit;
     }
 }
