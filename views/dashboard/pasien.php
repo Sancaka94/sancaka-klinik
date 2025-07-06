@@ -9,6 +9,8 @@
 // $janji_aktif = ...
 // $riwayat_rekam_medis = ...
 // $janji_temu = ...
+// $notifikasi_belum_dibaca = ...
+// $notifikasi_list = ...
 
 // Placeholder data untuk demonstrasi
 $user = $_SESSION['user'] ?? ['nama_lengkap' => 'Nama Pasien', 'foto' => null];
@@ -23,6 +25,12 @@ $riwayat_rekam_medis = [
 $janji_temu = [
     ['id_janji' => 205, 'tanggal_janji' => '2025-07-10', 'waktu_janji' => '10:00', 'nama_dokter' => 'Dr. Anisa Wijaya', 'status' => 'Dikonfirmasi'],
     ['id_janji' => 208, 'tanggal_janji' => '2025-07-18', 'waktu_janji' => '14:30', 'nama_dokter' => 'Dr. Budi Santoso', 'status' => 'Menunggu Konfirmasi']
+];
+$notifikasi_belum_dibaca = 3;
+$notifikasi_list = [
+    ['pesan' => 'Janji temu dikonfirmasi', 'waktu' => '3 jam lalu', 'icon' => 'fa-calendar-check', 'link' => '?url=janji/detail/205'],
+    ['pesan' => 'Resep baru telah terbit', 'waktu' => '1 hari lalu', 'icon' => 'fa-file-prescription', 'link' => '?url=resep/detail/78'],
+    ['pesan' => 'Pengingat jadwal kontrol', 'waktu' => '2 hari lalu', 'icon' => 'fa-info-circle', 'link' => '#']
 ];
 ?>
 <!DOCTYPE html>
@@ -57,26 +65,20 @@ $janji_temu = [
             <li class="nav-item dropdown">
                 <a class="nav-link" data-toggle="dropdown" href="#">
                     <i class="far fa-bell"></i>
-                    <span class="badge badge-warning navbar-badge">3</span>
+                    <?php if ($notifikasi_belum_dibaca > 0): ?>
+                    <span class="badge badge-warning navbar-badge"><?= $notifikasi_belum_dibaca ?></span>
+                    <?php endif; ?>
                 </a>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                    <span class="dropdown-header">3 Notifikasi Baru</span>
+                    <span class="dropdown-header"><?= $notifikasi_belum_dibaca ?> Notifikasi Baru</span>
                     <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-calendar-check mr-2"></i> Janji temu dikonfirmasi
-                        <span class="float-right text-muted text-sm">3 jam lalu</span>
+                    <?php foreach($notifikasi_list as $notif): ?>
+                    <a href="<?= $notif['link'] ?>" class="dropdown-item">
+                        <i class="fas <?= $notif['icon'] ?> mr-2"></i> <?= htmlspecialchars($notif['pesan']) ?>
+                        <span class="float-right text-muted text-sm"><?= $notif['waktu'] ?></span>
                     </a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-file-prescription mr-2"></i> Resep baru telah terbit
-                        <span class="float-right text-muted text-sm">1 hari lalu</span>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-info-circle mr-2"></i> Pengingat jadwal kontrol
-                        <span class="float-right text-muted text-sm">2 hari lalu</span>
-                    </a>
-                    <div class="dropdown-divider"></div>
+                    <?php endforeach; ?>
                     <a href="?url=notifikasi" class="dropdown-item dropdown-footer">Lihat Semua Notifikasi</a>
                 </div>
             </li>
@@ -246,7 +248,12 @@ $janji_temu = [
                                                 <?php $status_class = $janji['status'] == 'Dikonfirmasi' ? 'badge badge-success' : 'badge badge-warning'; ?>
                                                 <span class='<?= $status_class ?>'><?= htmlspecialchars($janji['status']) ?></span>
                                             </td>
-                                            <td><a href="?url=janji/detail/<?= $janji['id_janji'] ?>" class="btn btn-secondary btn-sm"><i class="fas fa-search"></i> Detail</a></td>
+                                            <td>
+                                                <a href="?url=janji/detail/<?= $janji['id_janji'] ?>" class="btn btn-secondary btn-sm"><i class="fas fa-search"></i> Detail</a>
+                                                <?php if ($janji['status'] == 'Menunggu Konfirmasi'): ?>
+                                                <a href="?url=janji/edit/<?= $janji['id_janji'] ?>" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Ubah</a>
+                                                <?php endif; ?>
+                                            </td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
