@@ -4,7 +4,12 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// File: app/controllers/AuthController.php
+// Mulai session jika belum ada. Ini harus dilakukan di awal.
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Memuat file-file yang diperlukan
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/User.php';
 
@@ -13,45 +18,14 @@ class AuthController {
 
     /**
      * Constructor untuk AuthController.
-     * Membuat koneksi database sekali dan memulai session.
+     * Membuat koneksi database sekali saat controller dibuat.
      */
-    
-     Tentu, saya lihat error baru yang Anda dapatkan.
-
-Fatal error: Uncaught Error: Cannot access private property Database::$conn
-
-Ini adalah error klasik dalam Pemrograman Berorientasi Objek (OOP) dan sangat bagus untuk dipelajari.
-
-Penyebab Error:
-
-Error ini terjadi karena di dalam file Database.php, properti $conn kita set sebagai private.
-
-PHP
-
-class Database {
-    private $conn; // 'private' berarti hanya bisa diakses dari DALAM class Database ini saja.
-    // ...
-}
-Ini adalah praktik yang baik untuk keamanan dan enkapsulasi. Karena $conn bersifat private, kode di file lain (seperti AuthController.php) tidak diizinkan untuk mengaksesnya secara langsung menggunakan $database->conn.
-
-Solusinya:
-
-Untuk mengatasi ini, kita telah membuat sebuah "jembatan" publik yang aman, yaitu method getConnection(). Method ini berada di dalam class Database sehingga ia bisa mengakses $conn dan kemudian mengembalikannya ke luar.
-
-Kode yang ada di dalam artifact Perbaikan: controllers/AuthController.php sudah menggunakan solusi yang benar. Perhatikan baik-baik pada bagian __construct:
-
-PHP
-
-public function __construct() {
-    // Buat instance dari class Database
-    $database = new Database();
-    
-    // BENAR: Menggunakan method publik getConnection() untuk mengambil koneksi
-    $this->conn = $database->getConnection(); 
-    
-    // SALAH (Ini yang menyebabkan error Anda):
-    // $this->conn = $database->conn; 
-}
+    public function __construct() {
+        // Membuat instance dari class Database
+        $database = new Database();
+        // Mengambil koneksi yang aktif dan menyimpannya di properti controller
+        $this->conn = $database->getConnection();
+    }
 
     /**
      * Menampilkan halaman form login.
@@ -117,7 +91,7 @@ public function __construct() {
     public function processRegister() { /* ... Logika registrasi pasien ... */ }
     public function processRegisterDokter() { /* ... Logika registrasi dokter ... */ }
 
-    // --- METODE LUPA PASSWORD (Versi Final) ---
+    // --- METODE LUPA PASSWORD ---
 
     /**
      * Menampilkan halaman form lupa password.
@@ -189,6 +163,55 @@ public function __construct() {
         exit;
     }
     
-    // ... (Fungsi helper seperti handleFileUpload tetap di sini) ...
-    private function handleFileUpload($file, $uploadDir) { /* ... */ }
+    /**
+     * Fungsi helper untuk menangani unggahan file.
+     * @param array $file Data file dari $_FILES.
+     * @param string $uploadDir Direktori tujuan untuk menyimpan file.
+     * @return string|false Nama file yang baru jika berhasil, false jika gagal.
+     */
+    private function handleFileUpload($file, $uploadDir) {
+        // Cek apakah ada error saat unggah
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            // Anda bisa menambahkan penanganan error yang lebih spesifik di sini
+            return false;
+        }
+
+        // Pastikan direktori tujuan ada, jika tidak, coba buat.
+        // __DIR__ . '/../..' akan mengarah ke root folder proyek (public_html/apps/klinik-app)
+        $targetPath = __DIR__ . '/../../' . $uploadDir;
+        if (!file_exists($targetPath)) {
+            mkdir($targetPath, 0777, true);
+        }
+
+        // Ambil ekstensi file
+        $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        // Buat nama file yang unik untuk menghindari penimpaan file
+        $newFileName = uniqid() . '.' . $fileExtension;
+        $destination = $targetPath . $newFileName;
+
+        // Validasi tipe file yang diizinkan (misal: hanya gambar)
+        $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
+        if (!in_array($fileExtension, $allowedTypes)) {
+            // Tipe file tidak diizinkan
+            return false;
+        }
+
+        // Validasi ukuran file (misal: maks 2MB)
+        $maxFileSize = 2 * 1024 * 1024; // 2 Megabytes
+        if ($file['size'] > $maxFileSize) {
+            // Ukuran file terlalu besar
+            return false;
+        }
+
+        // Pindahkan file dari lokasi sementara ke direktori tujuan
+        if (move_uploaded_file($file['tmp_name'], $destination)) {
+            // Jika berhasil, kembalikan nama file yang baru
+            return $newFileName;
+        } else {
+            // Gagal memindahkan file
+            return false;
+        }
+    }
 }
+?>
