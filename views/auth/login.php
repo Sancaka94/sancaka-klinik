@@ -1,6 +1,6 @@
 <?php
 // File: views/auth/login.php
-// Versi ini menggunakan Bootstrap 5 dengan desain dua panel.
+// Versi ini menggunakan Bootstrap 5 dengan desain dua panel dan link lupa password.
 
 // Memanggil header. Pastikan header.php memuat file bootstrap.min.css.
 require_once __DIR__ . '/../layouts/header.php';
@@ -101,7 +101,7 @@ require_once __DIR__ . '/../layouts/header.php';
                     </div>
 
                     <!-- Pilihan Peran/Role -->
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <select class="form-select form-control-minimal" id="id_peran" name="id_peran" required>
                             <option value="" disabled selected>-- Login sebagai --</option>
                             <option value="4">Pasien</option>
@@ -113,11 +113,16 @@ require_once __DIR__ . '/../layouts/header.php';
                     </div>
 
                     <!-- Tombol Submit -->
-                    <div class="d-grid">
+                    <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-custom-green rounded-pill">Login</button>
                     </div>
                 </form>
                 
+                <!-- PERUBAHAN: Menambahkan link Lupa Password -->
+                <div class="text-center mt-3">
+                    <a href="?url=auth/forgot_password" class="text-muted small text-decoration-none">Lupa Password?</a>
+                </div>
+
                 <div class="text-center mt-4 d-lg-none">
                     <hr>
                     <p class="text-muted small">Belum punya akun?</p>
