@@ -1,9 +1,9 @@
 <?php
 // File: controllers/JanjiTemuController.php
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/JanjiTemu.php'; // Model untuk operasi janji temu
-require_once __DIR__ . '/../models/Dokter.php';   // Model untuk mendapatkan daftar dokter
+require_once BASE_PATH . '/../config/database.php';
+require_once BASE_PATH . '/../models/JanjiTemu.php'; // Model untuk operasi janji temu
+require_once BASE_PATH . '/../models/Dokter.php';   // Model untuk mendapatkan daftar dokter
 
 class JanjiTemuController {
     
@@ -42,7 +42,7 @@ class JanjiTemuController {
         }
         
         // Memuat view yang menampilkan daftar janji temu
-        require_once __DIR__ . '/../views/janjitemu/index.php';
+        require_once BASE_PATH . '/../views/janjitemu/index.php';
     }
 
     /**
@@ -54,7 +54,7 @@ class JanjiTemuController {
         $list_dokter = $dokterModel->getAll();
 
         // Mengirim data daftar dokter ke view
-        require_once __DIR__ . '/../views/janjitemu/buat.php';
+        require_once BASE_PATH . '/../views/janjitemu/buat.php';
     }
 
     /**
@@ -112,7 +112,7 @@ class JanjiTemuController {
         $list_dokter = $dokterModel->getAll();
 
         // Memuat view form edit dan mengirim data janji temu serta daftar dokter
-        require_once __DIR__ . '/../views/janjitemu/edit.php';
+        require_once BASE_PATH . . '/../views/janjitemu/edit.php';
     }
 
     /**
