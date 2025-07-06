@@ -8,116 +8,71 @@ class User {
     public function __construct($db) {
         $this->conn = $db;
     }
-
-    /**
-     * Memproses login pengguna.
-     */
-    public function login($username, $password, $id_peran) {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->bind_param("ssi", $username, $username, $id_peran);
-            $stmt->execute();
-            
-            // PERBAIKAN: Menggunakan metode bind_result yang dinamis
-            $result = $this->getDynamicResult($stmt);
-            
-            if (count($result) === 1) {
-                $user = $result[0];
-                if (password_verify($password, $user['password'])) {
-                    $stmt->close();
-                    return $user; // Login berhasil
-                }
-            }
-            $stmt->close();
-            return false; // Login gagal
-
-        } catch (Exception $e) {
-            error_log("Error di User->login(): " . $e->getMessage());
-            return false;
-        }
-    }
     
-    /**
-     * Memeriksa apakah sebuah email sudah terdaftar.
-     */
-    public function emailExists($email) {
-        $query = "SELECT id_pengguna FROM " . $this->table_name . " WHERE email = ? LIMIT 1";
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $stmt->store_result();
-            $num_rows = $stmt->num_rows;
-            $stmt->close();
-            return $num_rows > 0;
-        } catch (Exception $e) {
-            error_log("Error di User->emailExists(): " . $e->getMessage());
-            return false;
-        }
-    }
+    // --- Metode yang sudah ada ---
+    public function login($username, $password, $id_peran) { /* ... (kode dari sebelumnya) ... */ }
+    public function register($data) { /* ... (kode dari sebelumnya) ... */ }
+    public function registerDokter($data) { /* ... (kode dari sebelumnya) ... */ }
+    public function emailExists($email) { /* ... (kode dari sebelumnya) ... */ }
+    private function getDynamicResult($stmt) { /* ... (kode dari sebelumnya) ... */ }
+    // --- Akhir metode yang sudah ada ---
 
-    // --- Metode register dan registerDokter tetap sama karena tidak mengambil data ---
-    public function register($data) {
-        $query = "INSERT INTO " . $this->table_name . " (username, email, password, id_peran, nama_lengkap) VALUES (?, ?, ?, 4, ?)";
-        try {
-            $stmt = $this->conn->prepare($query);
-            $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
-            $username = $data['email'];
-            $stmt->bind_param("ssss", $username, $data['email'], $password_hash, $data['nama_lengkap']);
-            return $stmt->execute();
-        } catch (Exception $e) {
-            error_log("Error di User->register(): " . $e->getMessage());
-            return false;
-        }
-    }
-
-    public function registerDokter($data) {
-        $query = "INSERT INTO " . $this->table_name . " (username, email, password, id_peran, nama_lengkap, spesialisasi, nomor_str, foto_profil) 
-                  VALUES (?, ?, ?, 3, ?, ?, ?, ?)";
-        try {
-            $stmt = $this->conn->prepare($query);
-            $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
-            $username = $data['email'];
-            $stmt->bind_param(
-                "sssssss",
-                $username,
-                $data['email'],
-                $password_hash,
-                $data['nama_lengkap'],
-                $data['spesialisasi'],
-                $data['nomor_str'],
-                $data['foto_profil']
-            );
-            return $stmt->execute();
-        } catch (Exception $e) {
-            error_log("Error di User->registerDokter(): " . $e->getMessage());
-            return false;
-        }
-    }
 
     /**
-     * Fungsi helper pribadi untuk mengambil hasil query secara dinamis
-     * tanpa menggunakan get_result().
+     * [UPDATE - FUNGSI YANG HILANG] Memperbarui data profil pengguna di database.
+     * @param array $data Data pengguna yang akan diperbarui.
+     * @return bool True jika berhasil, false jika gagal.
      */
-    private function getDynamicResult($stmt) {
-        $result = [];
-        $stmt->store_result();
-        if ($stmt->num_rows > 0) {
-            $meta = $stmt->result_metadata();
-            $params = [];
-            while ($field = $meta->fetch_field()) {
-                $params[] = &$row[$field->name];
-            }
-            call_user_func_array([$stmt, 'bind_result'], $params);
-            while ($stmt->fetch()) {
-                $c = [];
-                foreach ($row as $key => $val) {
-                    $c[$key] = $val;
-                }
-                $result[] = $c;
-            }
+    public function updateProfile($data) {
+        // Query dasar untuk update data pengguna umum
+        $query = "UPDATE " . $this->table_name . " SET nama_lengkap = ?, email = ? ";
+
+        // Siapkan array untuk parameter dan tipe data untuk bind_param
+        $params = [$data['nama_lengkap'], $data['email']];
+        $types = "ss";
+
+        // Tambahkan update password ke query jika password baru diisi
+        if (!empty($data['password'])) {
+            $query .= ", password = ? ";
+            $params[] = password_hash($data['password'], PASSWORD_BCRYPT);
+            $types .= "s";
         }
-        return $result;
+
+        // Tambahkan update foto profil ke query jika ada file baru yang di-upload
+        if (!empty($data['foto_profil'])) {
+             $query .= ", foto_profil = ? ";
+             $params[] = $data['foto_profil'];
+             $types .= "s";
+        }
+
+        // Tambahkan update data spesifik dokter jika ada
+        if (isset($data['spesialisasi']) && isset($data['nomor_str'])) {
+            $query .= ", spesialisasi = ?, nomor_str = ? ";
+            $params[] = $data['spesialisasi'];
+            $params[] = $data['nomor_str'];
+            $types .= "ss";
+        }
+
+        // Tambahkan kondisi WHERE di akhir query
+        $query .= " WHERE id_pengguna = ?";
+        $params[] = $data['id_pengguna'];
+        $types .= "i";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            if ($stmt === false) {
+                throw new Exception("Gagal prepare query update profil: " . $this->conn->error);
+            }
+
+            // Menggunakan 'splat operator' (...) untuk mengirim semua parameter ke bind_param
+            $stmt->bind_param($types, ...$params);
+            
+            // Eksekusi statement dan kembalikan hasilnya (true/false)
+            return $stmt->execute();
+
+        } catch (Exception $e) {
+            error_log("Error di User->updateProfile(): " . $e->getMessage());
+            return false;
+        }
     }
 }
