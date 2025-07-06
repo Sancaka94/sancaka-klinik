@@ -14,7 +14,10 @@
 
 // Placeholder data untuk demonstrasi
 $user = $_SESSION['user'] ?? ['nama_lengkap' => 'Nama Pasien', 'foto' => null];
-$foto_profil_path = $user['foto'] ? 'uploads/profil/' . htmlspecialchars($user['foto']) : 'https://placehold.co/128x128/343a40/ffffff?text=P';
+
+// [FIXED] Menggunakan !empty() untuk memeriksa apakah 'foto' ada dan tidak kosong.
+// Ini akan menghilangkan error "Undefined index".
+$foto_profil_path = !empty($user['foto']) ? 'uploads/profil/' . htmlspecialchars($user['foto']) : 'https://placehold.co/128x128/343a40/ffffff?text=P';
 
 $jumlah_kunjungan = 12;
 $janji_aktif = 2;
