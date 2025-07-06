@@ -15,13 +15,43 @@ class AuthController {
      * Constructor untuk AuthController.
      * Membuat koneksi database sekali dan memulai session.
      */
-    public function __construct() {
-        $database = new Database();
-        $this->conn = $database->conn;
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-    }
+    
+     Tentu, saya lihat error baru yang Anda dapatkan.
+
+Fatal error: Uncaught Error: Cannot access private property Database::$conn
+
+Ini adalah error klasik dalam Pemrograman Berorientasi Objek (OOP) dan sangat bagus untuk dipelajari.
+
+Penyebab Error:
+
+Error ini terjadi karena di dalam file Database.php, properti $conn kita set sebagai private.
+
+PHP
+
+class Database {
+    private $conn; // 'private' berarti hanya bisa diakses dari DALAM class Database ini saja.
+    // ...
+}
+Ini adalah praktik yang baik untuk keamanan dan enkapsulasi. Karena $conn bersifat private, kode di file lain (seperti AuthController.php) tidak diizinkan untuk mengaksesnya secara langsung menggunakan $database->conn.
+
+Solusinya:
+
+Untuk mengatasi ini, kita telah membuat sebuah "jembatan" publik yang aman, yaitu method getConnection(). Method ini berada di dalam class Database sehingga ia bisa mengakses $conn dan kemudian mengembalikannya ke luar.
+
+Kode yang ada di dalam artifact Perbaikan: controllers/AuthController.php sudah menggunakan solusi yang benar. Perhatikan baik-baik pada bagian __construct:
+
+PHP
+
+public function __construct() {
+    // Buat instance dari class Database
+    $database = new Database();
+    
+    // BENAR: Menggunakan method publik getConnection() untuk mengambil koneksi
+    $this->conn = $database->getConnection(); 
+    
+    // SALAH (Ini yang menyebabkan error Anda):
+    // $this->conn = $database->conn; 
+}
 
     /**
      * Menampilkan halaman form login.
