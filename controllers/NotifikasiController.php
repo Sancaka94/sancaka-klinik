@@ -1,38 +1,101 @@
 <?php
-// controllers/NotifikasiController.php
+// File: controllers/NotifikasiController.php
 
-if (session_status() == PHP_SESSION_NONE) {
+// Mulai session jika belum ada
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/Notifikasi.php';
 
 class NotifikasiController {
+    private $conn;
+    private $notifikasiModel;
+
+    public function __construct() {
+        $database = new Database();
+        $this->conn = $database->getConnection();
+        $this->notifikasiModel = new Notifikasi($this->conn);
+    }
 
     /**
-     * Menampilkan halaman daftar notifikasi.
+     * Menampilkan daftar notifikasi untuk pengguna yang sedang login.
      */
     public function index() {
-        $this->checkLogin();
+        if (!isset($_SESSION['user']['id_pengguna'])) {
+            header("Location: ?url=auth/login");
+            exit;
+        }
 
-        $notifikasiModel = new Notifikasi();
-        
-        // Ambil semua notifikasi untuk pengguna yang sedang login
-        $daftar_notifikasi = $notifikasiModel->getNotifikasiByPenggunaId($_SESSION['user']['id_pengguna']);
-        
-        // (Nantinya, di sini Anda bisa menambahkan logika untuk menandai notifikasi sebagai sudah dibaca)
+        $id_pengguna = $_SESSION['user']['id_pengguna'];
+        $notifikasi = $this->notifikasiModel->getByUserId($id_pengguna);
 
-        // Muat view dan teruskan data notifikasi ke dalamnya
-        require __DIR__ . '/../views/notifikasi/index.php';
+        // Muat halaman view untuk menampilkan notifikasi
+        require_once __DIR__ . '/../views/notifikasi/index.php';
     }
 
     /**
-     * Fungsi internal untuk memeriksa apakah pengguna sudah login.
+     * [SEMPURNA] Menandai satu notifikasi sebagai sudah dibaca dan mengarahkan ke link-nya.
+     * @param int $id_notifikasi ID notifikasi yang akan ditandai.
      */
-    private function checkLogin() {
-        if (!isset($_SESSION['user'])) {
-            header('Location: ?url=auth/login&error=Anda harus login terlebih dahulu.');
+    public function read($id_notifikasi) {
+        if (!isset($_SESSION['user']['id_pengguna'])) {
+            // Jika tidak login, tidak melakukan apa-apa atau redirect
+            exit('Akses ditolak.');
+        }
+
+        $id_pengguna = $_SESSION['user']['id_pengguna'];
+        
+        // Tandai sebagai sudah dibaca
+        $this->notifikasiModel->markAsRead($id_notifikasi, $id_pengguna);
+
+        // Ambil link dari notifikasi (opsional)
+        // Anda perlu menambahkan method find() di Notifikasi.php jika ingin fitur ini
+        // $notif = $this->notifikasiModel->find($id_notifikasi);
+        // if ($notif && !empty($notif['link'])) {
+        //     header("Location: " . $notif['link']);
+        // } else {
+        //     // Jika tidak ada link, kembali ke halaman sebelumnya
+        //     header("Location: " . $_SERVER['HTTP_REFERER'] ?? '?url=dashboard');
+        // }
+        
+        // Untuk saat ini, kita hanya kembali ke halaman sebelumnya
+        header("Location: " . ($_SERVER['HTTP_REFERER'] ?? '?url=dashboard'));
+        exit;
+    }
+
+    /**
+     * [SEMPURNA] Menandai semua notifikasi sebagai sudah dibaca.
+     */
+    public function readAll() {
+        if (!isset($_SESSION['user']['id_pengguna'])) {
+            exit('Akses ditolak.');
+        }
+
+        $id_pengguna = $_SESSION['user']['id_pengguna'];
+        $this->notifikasiModel->markAllAsReadByUserId($id_pengguna);
+
+        // Kembali ke halaman sebelumnya
+        header("Location: " . ($_SERVER['HTTP_REFERER'] ?? '?url=dashboard'));
+        exit;
+    }
+
+    /**
+     * [SEMPURNA] Endpoint untuk AJAX: Mengambil jumlah notifikasi yang belum dibaca.
+     */
+    public function getUnreadCount() {
+        if (!isset($_SESSION['user']['id_pengguna'])) {
+            echo json_encode(['unread_count' => 0]);
             exit;
         }
+        
+        $id_pengguna = $_SESSION['user']['id_pengguna'];
+        $count = $this->notifikasiModel->countUnreadByUserId($id_pengguna);
+
+        header('Content-Type: application/json');
+        echo json_encode(['unread_count' => $count]);
+        exit;
     }
 }
+?>
