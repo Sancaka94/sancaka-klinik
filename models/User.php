@@ -3,7 +3,6 @@
 
 class User {
     private $conn;
-    // Menggunakan nama tabel dari kode baru Anda
     private $table_name = "pengguna"; 
 
     public function __construct($db) {
@@ -12,34 +11,27 @@ class User {
 
     /**
      * Fungsi untuk memverifikasi login pengguna.
-     * Disempurnakan menggunakan PDO yang konsisten.
      */
     public function login($username, $password, $id_peran) {
         try {
-            $query = "SELECT id_pengguna, nama_lengkap, username, email, id_peran, password 
+            $query = "SELECT id_pengguna, nama_lengkap, username, email, id_peran, password, foto 
                       FROM " . $this->table_name . " 
                       WHERE (username = :username OR email = :email) AND id_peran = :id_peran 
                       LIMIT 1";
-
             $stmt = $this->conn->prepare($query);
-
-            // Ikat parameter dengan cara PDO
             $stmt->bindParam(':username', $username);
-            $stmt->bindParam(':email', $username); // Cek di kolom username dan email
+            $stmt->bindParam(':email', $username);
             $stmt->bindParam(':id_peran', $id_peran, PDO::PARAM_INT);
-
             $stmt->execute();
-
             if ($stmt->rowCount() > 0) {
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
                 if (password_verify($password, $user['password'])) {
-                    unset($user['password']); // Hapus password dari data session
+                    unset($user['password']);
                     return $user;
                 }
                 return 'WRONG_PASSWORD';
             }
             return 'USER_NOT_FOUND';
-
         } catch (PDOException $e) {
             error_log("KRITIS - Error di User->login(): " . $e->getMessage());
             return 'DB_ERROR';
@@ -47,33 +39,121 @@ class User {
     }
 
     /**
-     * Membuat pengguna baru (registrasi).
-     * @return bool True jika berhasil, false jika gagal.
+     * Menemukan pengguna berdasarkan ID.
      */
-    public function createUser($nama_lengkap, $username, $email, $password, $id_peran) {
+    public function find($id_pengguna) {
+        try {
+            $query = "SELECT * FROM " . $this->table_name . " WHERE id_pengguna = :id_pengguna LIMIT 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id_pengguna', $id_pengguna, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error di User->find(): " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Memperbarui profil pengguna.
+     */
+    public function updateProfile($data) {
+        try {
+            $checkQuery = "SELECT id_pengguna FROM " . $this->table_name . " WHERE email = :email AND id_pengguna != :id_pengguna LIMIT 1";
+            $checkStmt = $this->conn->prepare($checkQuery);
+            $checkStmt->bindParam(':email', $data['email']);
+            $checkStmt->bindParam(':id_pengguna', $data['id_pengguna'], PDO::PARAM_INT);
+            $checkStmt->execute();
+            if ($checkStmt->rowCount() > 0) {
+                return false; // Email sudah digunakan
+            }
+
+            $query = "UPDATE " . $this->table_name . " 
+                      SET nama_lengkap = :nama_lengkap, 
+                          email = :email, 
+                          no_telepon = :no_telepon, 
+                          alamat = :alamat, 
+                          foto = :foto,
+                          spesialisasi = :spesialisasi,
+                          nomor_str = :nomor_str
+                      WHERE id_pengguna = :id_pengguna";
+            $stmt = $this->conn->prepare($query);
+
+            $stmt->bindParam(':nama_lengkap', $data['nama_lengkap']);
+            $stmt->bindParam(':email', $data['email']);
+            $stmt->bindParam(':no_telepon', $data['no_telepon']);
+            $stmt->bindParam(':alamat', $data['alamat']);
+            $stmt->bindParam(':foto', $data['foto']);
+            $stmt->bindParam(':spesialisasi', $data['spesialisasi']);
+            $stmt->bindParam(':nomor_str', $data['nomor_str']);
+            $stmt->bindParam(':id_pengguna', $data['id_pengguna'], PDO::PARAM_INT);
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error di User->updateProfile(): " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Mengubah password pengguna dari halaman profil.
+     */
+    public function changePassword($id_pengguna, $oldPassword, $newPassword) {
+        try {
+            $query = "SELECT password FROM " . $this->table_name . " WHERE id_pengguna = :id_pengguna LIMIT 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id_pengguna', $id_pengguna, PDO::PARAM_INT);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (password_verify($oldPassword, $user['password'])) {
+                    $new_password_hash = password_hash($newPassword, PASSWORD_BCRYPT);
+                    $updateQuery = "UPDATE " . $this->table_name . " SET password = :password WHERE id_pengguna = :id_pengguna";
+                    $updateStmt = $this->conn->prepare($updateQuery);
+                    $updateStmt->bindParam(':password', $new_password_hash);
+                    $updateStmt->bindParam(':id_pengguna', $id_pengguna, PDO::PARAM_INT);
+                    
+                    return $updateStmt->execute() ? 'SUCCESS' : 'DB_ERROR';
+                }
+                return 'WRONG_PASSWORD';
+            }
+            return 'USER_NOT_FOUND';
+        } catch (PDOException $e) {
+            error_log("Error di User->changePassword(): " . $e->getMessage());
+            return 'DB_ERROR';
+        }
+    }
+
+    /**
+     * Membuat pengguna baru (registrasi).
+     */
+    public function createUser($data) {
         try {
             $checkQuery = "SELECT id_pengguna FROM " . $this->table_name . " WHERE username = :username OR email = :email LIMIT 1";
             $checkStmt = $this->conn->prepare($checkQuery);
-            $checkStmt->bindParam(':username', $username);
-            $checkStmt->bindParam(':email', $email);
+            $checkStmt->bindParam(':username', $data['username']);
+            $checkStmt->bindParam(':email', $data['email']);
             $checkStmt->execute();
             if ($checkStmt->rowCount() > 0) {
                 return false; // Pengguna sudah ada
             }
 
-            $query = "INSERT INTO " . $this->table_name . " (nama_lengkap, username, email, password, id_peran) VALUES (:nama_lengkap, :username, :email, :password, :id_peran)";
+            $query = "INSERT INTO " . $this->table_name . " (nama_lengkap, username, email, password, id_peran, foto, spesialisasi, nomor_str) VALUES (:nama_lengkap, :username, :email, :password, :id_peran, :foto, :spesialisasi, :nomor_str)";
             $stmt = $this->conn->prepare($query);
 
-            $password_hash = password_hash($password, PASSWORD_BCRYPT);
+            $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
 
-            $stmt->bindParam(':nama_lengkap', $nama_lengkap);
-            $stmt->bindParam(':username', $username);
-            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':nama_lengkap', $data['nama_lengkap']);
+            $stmt->bindParam(':username', $data['username']);
+            $stmt->bindParam(':email', $data['email']);
             $stmt->bindParam(':password', $password_hash);
-            $stmt->bindParam(':id_peran', $id_peran, PDO::PARAM_INT);
+            $stmt->bindParam(':id_peran', $data['id_peran'], PDO::PARAM_INT);
+            $stmt->bindParam(':foto', $data['foto']);
+            $stmt->bindParam(':spesialisasi', $data['spesialisasi']);
+            $stmt->bindParam(':nomor_str', $data['nomor_str']);
 
             return $stmt->execute();
-
         } catch (PDOException $e) {
             error_log("Error di User->createUser(): " . $e->getMessage());
             return false;
@@ -82,22 +162,19 @@ class User {
 
     /**
      * Membuat token reset password.
-     * CATATAN: Pastikan Anda memiliki kolom `reset_token_hash` (VARCHAR 255) dan `reset_token_expires_at` (DATETIME) di tabel 'pengguna'.
-     * @return string|false Token jika berhasil, false jika email tidak ditemukan.
      */
     public function generateResetToken($email) {
         try {
             $clean_email = strtolower(trim($email));
-            // Cek dulu apakah email ada
             $checkQuery = "SELECT id_pengguna FROM " . $this->table_name . " WHERE email = :email LIMIT 1";
             $checkStmt = $this->conn->prepare($checkQuery);
             $checkStmt->bindParam(':email', $clean_email);
             $checkStmt->execute();
 
             if ($checkStmt->rowCount() > 0) {
-                $token = bin2hex(random_bytes(32)); // Token mentah untuk dikirim ke user
-                $token_hash = hash('sha256', $token); // Hash untuk disimpan di DB
-                $expires_at = date('Y-m-d H:i:s', time() + 3600); // Berlaku 1 jam
+                $token = bin2hex(random_bytes(32));
+                $token_hash = hash('sha256', $token);
+                $expires_at = date('Y-m-d H:i:s', time() + 3600); // Token berlaku 1 jam
 
                 $updateQuery = "UPDATE " . $this->table_name . " SET reset_token_hash = :token_hash, reset_token_expires_at = :expires_at WHERE email = :email";
                 $updateStmt = $this->conn->prepare($updateQuery);
@@ -105,57 +182,45 @@ class User {
                 $updateStmt->bindParam(':expires_at', $expires_at);
                 $updateStmt->bindParam(':email', $clean_email);
                 
-                if ($updateStmt->execute()) {
-                    return $token; // Berhasil, kembalikan token mentah
-                }
+                return $updateStmt->execute() ? $token : false;
             }
-            return false; // Email tidak ditemukan atau gagal update
+            return false;
         } catch (PDOException $e) {
             error_log("Error di User->generateResetToken(): " . $e->getMessage());
             return false;
         }
     }
-
-    /**
-     * Memvalidasi token reset password.
-     * @return bool True jika token valid, false jika tidak.
-     */
-    public function validateResetToken($token) {
-        try {
-            $token_hash = hash('sha256', $token);
-            $query = "SELECT id_pengguna FROM " . $this->table_name . " WHERE reset_token_hash = :token_hash AND reset_token_expires_at > NOW() LIMIT 1";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':token_hash', $token_hash);
-            $stmt->execute();
-
-            return $stmt->rowCount() > 0;
-        } catch (PDOException $e) {
-            error_log("Error di User->validateResetToken(): " . $e->getMessage());
-            return false;
-        }
-    }
-
+    
     /**
      * Mengatur ulang password pengguna menggunakan token.
-     * @return bool True jika berhasil, false jika gagal.
      */
     public function resetPassword($token, $newPassword) {
         try {
-            if (!$this->validateResetToken($token)) {
-                return false; // Token tidak valid atau sudah kedaluwarsa
+            // Langkah 1: Validasi token terlebih dahulu
+            $token_hash = hash('sha256', $token);
+            $checkQuery = "SELECT id_pengguna FROM " . $this->table_name . " WHERE reset_token_hash = :token_hash AND reset_token_expires_at > NOW() LIMIT 1";
+            $checkStmt = $this->conn->prepare($checkQuery);
+            $checkStmt->bindParam(':token_hash', $token_hash);
+            $checkStmt->execute();
+
+            // Langkah 2: Jika token valid, lanjutkan update password
+            if ($checkStmt->rowCount() > 0) {
+                // Hash password baru
+                $password_hash = password_hash($newPassword, PASSWORD_BCRYPT);
+                
+                // Update password dan hapus token agar tidak bisa digunakan lagi
+                $updateQuery = "UPDATE " . $this->table_name . " SET password = :password, reset_token_hash = NULL, reset_token_expires_at = NULL WHERE reset_token_hash = :token_hash";
+                $updateStmt = $this->conn->prepare($updateQuery);
+                $updateStmt->bindParam(':password', $password_hash);
+                $updateStmt->bindParam(':token_hash', $token_hash);
+                
+                // Kembalikan true jika update berhasil
+                return $updateStmt->execute();
             }
             
-            $token_hash = hash('sha256', $token);
-            $password_hash = password_hash($newPassword, PASSWORD_BCRYPT);
+            // Jika token tidak valid atau kedaluwarsa
+            return false;
 
-            $query = "UPDATE " . $this->table_name . " SET password = :password, reset_token_hash = NULL, reset_token_expires_at = NULL WHERE reset_token_hash = :token_hash";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':password', $password_hash);
-            $stmt->bindParam(':token_hash', $token_hash);
-
-            return $stmt->execute();
         } catch (PDOException $e) {
             error_log("Error di User->resetPassword(): " . $e->getMessage());
             return false;

@@ -172,3 +172,4 @@ require_once __DIR__ . '/../layouts/header.php';
 // Asumsi footer.php sudah memuat file JS Bootstrap dari lokal
 require_once __DIR__ . '/../layouts/footer.php';
 ?>
+
