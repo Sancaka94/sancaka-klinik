@@ -1,36 +1,35 @@
 <?php
-// File: config.php
+// File: config/database.php
+// Ganti isi file lama Anda dengan kode class ini.
 
-// Pengaturan zona waktu default
-date_default_timezone_set('Asia/Jakarta');
+class Database {
+    // Properti untuk koneksi database
+    private $host = 'localhost';
+    private $db_name = 'sancakab_klinik';
+    private $username = 'sancakab_admin';
+    private $password = 'Salafyyin***94';
+    private $conn; // Properti untuk menampung koneksi PDO
 
-// Detail koneksi database
-$db_host = "localhost";
-$db_user = "sancakab_admin";
-$db_pass = "Salafyyin***94";
-$db_name = "sancakab_klinik";
+    // Method untuk mendapatkan koneksi ke database
+    public function getConnection() {
+        $this->conn = null; // Set koneksi ke null di awal
 
-// Membuat koneksi ke database menggunakan MySQLi
-$con = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+        try {
+            // Membuat instance PDO baru
+            $this->conn = new PDO('mysql:host=' . $this->host . ';dbname=' . $this->db_name, $this->username, $this->password);
+            
+            // Mengatur mode error PDO ke exception untuk penanganan error yang lebih baik
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            // Mengatur agar hasil fetch default adalah associative array
+            $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-// Memeriksa apakah koneksi berhasil atau gagal
-if(mysqli_connect_errno()){
-	// Jika koneksi gagal, hentikan skrip dan tampilkan pesan error
-	die("Koneksi database gagal: " . mysqli_connect_error());
-}
+        } catch(PDOException $exception) {
+            // Jika koneksi gagal, hentikan eksekusi dan tampilkan pesan error
+            die('Connection error: ' . $exception->getMessage());
+        }
 
-/**
- * Fungsi untuk mengambil base URL dari aplikasi.
- * Ini membuat tautan menjadi dinamis dan tidak perlu diubah-ubah
- * saat folder proyek dipindahkan.
- */
-function base_url($url = null) {
-    // Diperbarui sesuai dengan path proyek Anda
-    $base_url = "http://localhost/apps/klinik-app"; 
-    if ($url != null) {
-        return $base_url . "/" . $url;
-    } else {
-        return $base_url;
+        return $this->conn;
     }
 }
 ?>
