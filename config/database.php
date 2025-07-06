@@ -1,37 +1,36 @@
 <?php
-// File: config/database.php
-// Ini Fix
+// File: config.php
 
-class Database {
-    // Properti untuk menyimpan detail koneksi database Anda
-    // PERBAIKAN: Menggunakan kredensial yang Anda berikan.
-    private $host = "localhost";
-    private $db_name = "sancakab_klinik";
-    private $username = "sancakab_admin";
-    private $password = "Salafyyin***94";
+// Pengaturan zona waktu default
+date_default_timezone_set('Asia/Jakarta');
 
-    // Properti PUBLIK untuk menyimpan objek koneksi
-    public $conn;
+// Detail koneksi database
+$db_host = "localhost";
+$db_user = "sancakab_admin";
+$db_pass = "Salafyyin***94";
+$db_name = "sancakab_klinik";
 
-    /**
-     * Constructor akan otomatis dijalankan saat 'new Database()' dipanggil.
-     * Fungsinya adalah membuat koneksi dan menyimpannya ke dalam $this->conn.
-     */
-    public function __construct() {
-        $this->conn = null; // Set ke null dulu untuk awal
+// Membuat koneksi ke database menggunakan MySQLi
+$con = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
 
-        try {
-            // Membuat objek koneksi mysqli baru
-            $this->conn = new mysqli($this->host, $this->username, $this->password, $this->db_name);
-            
-            // Mengatur set karakter untuk mencegah masalah encoding
-            $this->conn->set_charset("utf8mb4");
+// Memeriksa apakah koneksi berhasil atau gagal
+if(mysqli_connect_errno()){
+	// Jika koneksi gagal, hentikan skrip dan tampilkan pesan error
+	die("Koneksi database gagal: " . mysqli_connect_error());
+}
 
-        } catch (mysqli_sql_exception $exception) {
-            // Jika koneksi gagal, tampilkan pesan error dan hentikan script
-            // Di lingkungan produksi, sebaiknya ini dicatat ke log, bukan ditampilkan ke pengguna
-            // Lengkap
-            die("Koneksi Database Gagal: " . $exception->getMessage());
-        }
+/**
+ * Fungsi untuk mengambil base URL dari aplikasi.
+ * Ini membuat tautan menjadi dinamis dan tidak perlu diubah-ubah
+ * saat folder proyek dipindahkan.
+ */
+function base_url($url = null) {
+    // Diperbarui sesuai dengan path proyek Anda
+    $base_url = "http://localhost/apps/klinik-app"; 
+    if ($url != null) {
+        return $base_url . "/" . $url;
+    } else {
+        return $base_url;
     }
 }
+?>
