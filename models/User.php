@@ -1,5 +1,6 @@
 <?php
 // File: models/User.php
+// VERSI DEBUGGING UNTUK MENAMPILKAN ERROR ASLI
 
 class User {
     private $conn;
@@ -11,6 +12,7 @@ class User {
 
     /**
      * Fungsi untuk memverifikasi login pengguna.
+     * [MODIFIKASI DEBUG] Menampilkan error database secara langsung.
      */
     public function login($username, $password, $id_peran) {
         try {
@@ -23,6 +25,7 @@ class User {
             $stmt->bindParam(':email', $username);
             $stmt->bindParam(':id_peran', $id_peran, PDO::PARAM_INT);
             $stmt->execute();
+
             if ($stmt->rowCount() > 0) {
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
                 if (password_verify($password, $user['password'])) {
@@ -32,15 +35,14 @@ class User {
                 return 'WRONG_PASSWORD';
             }
             return 'USER_NOT_FOUND';
+
         } catch (PDOException $e) {
-            error_log("KRITIS - Error di User->login(): " . $e->getMessage());
-            return 'DB_ERROR';
+            // [MODIFIKASI DEBUG] Hentikan eksekusi dan tampilkan pesan error asli dari database
+            die("DATABASE QUERY ERROR: " . $e->getMessage());
         }
     }
 
-    /**
-     * Menemukan pengguna berdasarkan ID.
-     */
+    // --- Method lain tetap sama ---
     public function find($id_pengguna) {
         try {
             $query = "SELECT * FROM " . $this->table_name . " WHERE id_pengguna = :id_pengguna LIMIT 1";
@@ -53,7 +55,7 @@ class User {
             return false;
         }
     }
-
+    
     /**
      * Memperbarui profil pengguna dengan data lengkap.
      */
@@ -134,7 +136,7 @@ class User {
     }
 
     /**
-     * [LENGKAP] Membuat pengguna baru (registrasi).
+     * Membuat pengguna baru (registrasi).
      */
     public function createUser($data) {
         try {
@@ -173,7 +175,7 @@ class User {
     }
 
     /**
-     * [LENGKAP] Membuat token reset password.
+     * Membuat token reset password.
      */
     public function generateResetToken($email) {
         try {
@@ -204,7 +206,7 @@ class User {
     }
     
     /**
-     * [LENGKAP] Mengatur ulang password pengguna menggunakan token.
+     * Mengatur ulang password pengguna menggunakan token.
      */
     public function resetPassword($token, $newPassword) {
         try {
