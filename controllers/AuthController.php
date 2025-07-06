@@ -18,35 +18,39 @@ class AuthController {
     }
 
     /**
-     * [DEEPER DEBUGGING] Memproses permintaan lupa password dengan output yang lebih detail.
+     * [MODE DEBUG PINTAR] Memproses permintaan lupa password dengan output debug.
      */
     public function send_reset_link() {
-        echo "<b>DEBUGGING MODE AKTIF (LEVEL 2)</b><br><hr>";
-        echo "DEBUG: Masuk ke metode send_reset_link.<br>";
+        // Header untuk memastikan output adalah HTML
+        header('Content-Type: text/html; charset=utf-8');
 
-        // PERBAIKAN: Cetak metode request dan seluruh isi $_POST
-        echo "DEBUG: Metode Request Server: <b>" . $_SERVER['REQUEST_METHOD'] . "</b><br>";
-        echo "DEBUG: Isi dari \$_POST:<br>";
-        echo "<pre>";
-        print_r($_POST);
-        echo "</pre>";
+        echo "<h1><pre>-- DEBUGGING MODE AKTIF --</pre></h1>";
         echo "<hr>";
+        echo "<p><strong>Analisis Data yang Diterima Server:</strong></p>";
+        echo "<ul>";
+        echo "<li>Metode Request Server: <strong>" . htmlspecialchars($_SERVER['REQUEST_METHOD']) . "</strong></li>";
+        echo "<li>Isi dari \$_POST: <pre>" . htmlspecialchars(print_r($_POST, true)) . "</pre></li>";
+        echo "</ul><hr>";
 
         $email = $_POST['email'] ?? '';
         if (empty($email)) {
-            die("<b>ANALISIS:</b> Variabel \$_POST['email'] kosong atau tidak ada. Proses dihentikan.");
+            echo "<h3><font color='red'>ANALISIS GAGAL:</font></h3>";
+            echo "<p>Server tidak menerima 'email' dari form. Pastikan form di `views/auth/forgot_password.php` memiliki `method=\"POST\"` dan input email memiliki `name=\"email\"`.</p>";
+            die();
         }
         
-        // Kode di bawah ini hanya akan berjalan jika email diterima
-        echo "DEBUG: Email yang diterima dari form: <b>" . htmlspecialchars($email) . "</b><br>";
+        echo "<p><strong>Analisis Proses di Server:</strong></p>";
+        echo "<ul>";
+        echo "<li>Email yang diterima dari form: <strong>" . htmlspecialchars($email) . "</strong></li>";
 
         $userModel = new User($this->conn);
-        echo "DEBUG: Mencoba membuat token untuk email...<br>";
+        echo "<li>Mencoba membuat token untuk email di database...</li>";
         
         $token = $userModel->generateResetToken($email);
 
         if ($token) {
-            echo "DEBUG: SUKSES - Token berhasil dibuat: " . htmlspecialchars($token) . "<br>";
+            echo "<li><font color='green'><strong>SUKSES:</strong></font> Token berhasil dibuat.</li>";
+            echo "<li>Token yang dihasilkan: <code>" . htmlspecialchars($token) . "</code></li>";
             
             $resetLink = "https://sancaka.biz.id/apps/klinik-app/?url=auth/reset_password&token=" . $token;
             $adminWhatsApp = "6285745808809";
@@ -57,19 +61,25 @@ class AuthController {
 
             $waLink = "https://wa.me/" . $adminWhatsApp . "?text=" . urlencode($message);
 
-            echo "DEBUG: Link WhatsApp yang akan diarahkan: <a href='" . $waLink . "'>" . $waLink . "</a><br>";
-            echo "DEBUG: Proses selesai.";
-            die(); 
+            echo "<li>Link WhatsApp yang akan diarahkan: <a href='" . $waLink . "' target='_blank'>" . $waLink . "</a></li>";
+            echo "</ul><hr>";
+            echo "<h3><pre>-- PROSES DEBUG SELESAI --</pre></h3>";
+            echo "<p>Jika ini bukan mode debug, Anda akan otomatis diarahkan ke link WhatsApp di atas.</p>";
 
         } else {
-            die("DEBUG: GAGAL - Email '" . htmlspecialchars($email) . "' tidak ditemukan di database.");
+            echo "<li><font color='red'><strong>GAGAL:</strong></font> Fungsi `generateResetToken()` di User Model mengembalikan `false`.</li>";
+            echo "</ul><hr>";
+            echo "<h3><pre>-- PROSES DEBUG SELESAI --</pre></h3>";
+            echo "<p><strong>Kemungkinan Penyebab:</strong> Email '<strong>" . htmlspecialchars($email) . "</strong>' tidak ditemukan di dalam tabel `pengguna` di database Anda.</p>";
         }
+        
+        // Hentikan eksekusi setelah menampilkan debug
         exit;
     }
     
     // ... (Semua metode lain seperti login, authenticate, dll. tetap sama) ...
     
-    public function login() { /* ... */ }
+    public function login() { require_once __DIR__ . '/../views/auth/login.php'; }
     public function authenticate() { /* ... */ }
     public function logout() { /* ... */ }
     public function register() { /* ... */ }

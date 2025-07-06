@@ -13,6 +13,15 @@ require_once __DIR__ . '/../layouts/header.php';
                     <h3 class="fw-bold">Lupa Password</h3>
                     <p class="text-muted">Masukkan email Anda. Kami akan mengirimkan link reset password ke WhatsApp Admin.</p>
                 </div>
+
+                <?php
+                // Menampilkan pesan error jika ada
+                if (isset($_GET['error'])) {
+                    echo '<div class="alert alert-danger" role="alert">' . htmlspecialchars($_GET['error']) . '</div>';
+                }
+                ?>
+
+                <!-- PERBAIKAN: Menambahkan method="POST" ke dalam form -->
                 <form action="?url=auth/send_reset_link" method="POST">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Terdaftar</label>
@@ -23,7 +32,7 @@ require_once __DIR__ . '/../layouts/header.php';
                     </div>
                 </form>
                 <div class="text-center mt-3">
-                    <a href="?url=auth/login" class="text-muted small">&larr; Kembali ke Login</a>
+                    <a href="?url=auth/login" class="text-muted small text-decoration-none">&larr; Kembali ke Login</a>
                 </div>
             </div>
         </div>
