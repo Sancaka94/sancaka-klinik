@@ -13,7 +13,6 @@ if (session_status() === PHP_SESSION_NONE) {
 // Memuat file-file yang diperlukan
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/User.php';
-// [SEMPURNA] Memuat model lain yang diperlukan untuk dashboard
 require_once __DIR__ . '/../models/RekamMedis.php';
 require_once __DIR__ . '/../models/JanjiTemu.php';
 
@@ -27,7 +26,6 @@ class DashboardController {
     public function __construct() {
         $database = new Database();
         $this->conn = $database->getConnection();
-        // [SEMPURNA] Membuat instance dari semua model yang diperlukan
         $this->userModel = new User($this->conn);
         $this->rekamMedisModel = new RekamMedis($this->conn);
         $this->janjiTemuModel = new JanjiTemu($this->conn);
@@ -49,7 +47,6 @@ class DashboardController {
             case 3: $this->dokter(); break;
             case 4: $this->pasien(); break;
             case 5: $this->owner(); break;
-            // [SEMPURNA] Menambahkan case untuk peran staf
             case 6: $this->staf(); break;
             default:
                 session_destroy();
@@ -59,7 +56,7 @@ class DashboardController {
     }
 
     /**
-     * [SEMPURNA] Menampilkan dashboard untuk Pasien dengan data dinamis.
+     * Menampilkan dashboard untuk Pasien dengan data dinamis.
      */
     public function pasien() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 4) {
@@ -71,14 +68,17 @@ class DashboardController {
         // Mengambil data spesifik untuk pasien dari model
         $jumlah_kunjungan = $this->rekamMedisModel->countKunjungan($id_pengguna);
         $janji_aktif = $this->janjiTemuModel->countJanjiAktif($id_pengguna);
+        
+        // [FIXED] Menggunakan nama method yang benar: getRiwayatByPasien()
         $riwayat_rekam_medis = $this->rekamMedisModel->getRiwayatByPasien($id_pengguna);
+        
         $janji_temu = $this->janjiTemuModel->getJanjiByPasien($id_pengguna);
         
         require_once __DIR__ . '/../views/dashboard/pasien.php';
     }
 
     /**
-     * [SEMPURNA] Menampilkan dashboard untuk Dokter dengan data dinamis.
+     * Menampilkan dashboard untuk Dokter dengan data dinamis.
      */
     public function dokter() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 3) {
@@ -92,7 +92,7 @@ class DashboardController {
     }
 
     /**
-     * [SEMPURNA] Menampilkan dashboard untuk Admin dengan data dinamis.
+     * Menampilkan dashboard untuk Admin dengan data dinamis.
      */
     public function admin() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 2) {
@@ -107,7 +107,7 @@ class DashboardController {
     }
 
     /**
-     * [SEMPURNA] Menampilkan dashboard untuk Superadmin.
+     * Menampilkan dashboard untuk Superadmin.
      */
     public function superadmin() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 1) {
@@ -117,24 +117,22 @@ class DashboardController {
     }
     
     /**
-     * [SEMPURNA] Menampilkan dashboard untuk Owner.
+     * Menampilkan dashboard untuk Owner.
      */
     public function owner() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 5) {
             $this->redirectToLogin("Akses ditolak. Silakan login sebagai Owner.");
         }
-        // Owner bisa melihat dashboard yang sama dengan Superadmin
         require_once __DIR__ . '/../views/dashboard/superadmin.php';
     }
 
     /**
-     * [BARU & SEMPURNA] Menampilkan dashboard untuk Staf.
+     * Menampilkan dashboard untuk Staf.
      */
     public function staf() {
         if (!$this->isLoggedIn() || $_SESSION['user']['id_peran'] != 6) {
             $this->redirectToLogin("Akses ditolak. Silakan login sebagai Staf.");
         }
-        // Staf bisa melihat dashboard yang sama dengan Admin, atau buat view khusus
         require_once __DIR__ . '/../views/dashboard/admin.php';
     }
 
