@@ -11,12 +11,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Memuat file-file yang diperlukan
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/User.php';
-require_once __DIR__ . '/../models/RekamMedis.php';
-require_once __DIR__ . '/../models/JanjiTemu.php';
+require_once BASE_PATH . '/../config/database.php';
+require_once BASE_PATH . '/../models/User.php';
+require_once BASE_PATH . '/../models/RekamMedis.php';
+require_once BASE_PATH . '/../models/JanjiTemu.php';
 // [BARU] Memuat model Notifikasi
-require_once __DIR__ . '/../models/Notifikasi.php';
+require_once BASE_PATH . . '/../models/Notifikasi.php';
 
 class DashboardController {
 
@@ -83,7 +83,7 @@ class DashboardController {
         $notifikasi_list = $this->notifikasiModel->getByUserId($id_pengguna);
         
         // Mengirim semua data ke view
-        require_once __DIR__ . '/../views/dashboard/pasien.php';
+        require_once BASE_PATH . . '/../views/dashboard/pasien.php';
     }
 
     /**
@@ -100,7 +100,7 @@ class DashboardController {
         // $pasien_hari_ini = $this->janjiTemuModel->countPasienByDokter($id_dokter, date('Y-m-d'));
         // $janji_selesai = $this->janjiTemuModel->countJanjiSelesaiByDokter($id_dokter, date('Y-m-d'));
         
-        require_once __DIR__ . '/../views/dashboard/dokter.php';
+        require_once BASE_PATH . . '/../views/dashboard/dokter.php';
     }
 
     /**
@@ -115,7 +115,7 @@ class DashboardController {
         // $total_pasien = $this->userModel->countByRole(4); 
         // $janji_hari_ini = $this->janjiTemuModel->countJanjiByDate(date('Y-m-d'));
 
-        require_once __DIR__ . '/../views/dashboard/admin.php';
+        require_once BASE_PATH . . '/../views/dashboard/admin.php';
     }
 
     /**
