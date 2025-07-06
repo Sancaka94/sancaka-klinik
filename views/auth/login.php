@@ -1,31 +1,36 @@
 <?php
 // File: views/auth/login.php
-// Versi ini menggunakan Tailwind CSS untuk tampilan yang modern.
+// TIDAK PERLU ADA require_once untuk model di sini.
+// File ini hanya untuk menampilkan HTML.
 
-// Memanggil header. Pastikan header.php memuat Tailwind CSS.
+// Memanggil header
 require_once __DIR__ . '/../layouts/header.php';
+
+// Menampilkan pesan error jika ada
+if (isset($_GET['error'])) {
+    echo '<div class="alert alert-danger" role="alert">' . htmlspecialchars($_GET['error']) . '</div>';
+}
+// Menampilkan pesan sukses jika ada (misal: setelah registrasi)
+if (isset($_GET['status']) && $_GET['status'] === 'registrasi_sukses') {
+    echo '<div class="alert alert-success" role="alert">Registrasi berhasil! Silakan login.</div>';
+}
 ?>
 
-<div class="flex items-center justify-center min-h-screen bg-gray-100">
-    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        
-        <div class="text-center">
-            <h1 class="text-3xl font-bold text-gray-900">Login Akun</h1>
-            <p class="mt-2 text-sm text-gray-600">Silakan masuk untuk melanjutkan.</p>
-        </div>
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">Login Pengguna</h4>
+            </div>
+            <div class="card-body p-4">
+                <form action="?url=auth/authenticate" method="POST">
+                    <!-- Input Username/Email -->
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username atau Email</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
 
-        <?php
-        // Menampilkan pesan error jika ada
-        if (isset($_GET['error'])) {
-            echo '<div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">' . htmlspecialchars($_GET['error']) . '</div>';
-        }
-        // Menampilkan pesan sukses jika ada
-        if (isset($_GET['status']) && $_GET['status'] === 'registrasi_sukses') {
-            echo '<div class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg" role="alert">Registrasi berhasil! Silakan login.</div>';
-        }
-        ?>
-
-        <form class="mt-8 space-y-6" action="?url=auth/authenticate" method="POST">
+                   <form class="mt-8 space-y-6" action="?url=auth/authenticate" method="POST">
             <input type="hidden" name="remember" value="true">
             <div class="space-y-4 rounded-md shadow-sm">
                 <div>
