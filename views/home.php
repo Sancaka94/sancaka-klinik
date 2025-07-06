@@ -1,6 +1,7 @@
 <?php 
 // File: views/home.php
-// Menggunakan layout untuk halaman publik
+
+// [DIPERBAIKI] Path disesuaikan agar selalu benar dari lokasi file ini.
 require_once __DIR__ . '/layouts/header_public.php'; 
 ?>
 
@@ -167,6 +168,6 @@ require_once __DIR__ . '/layouts/header_public.php';
 
 
 <?php 
-// Memanggil footer layout publik
-require_once __DIR__ . '/../layouts/footer_public.php'; 
+// [DIPERBAIKI] Path disesuaikan agar selalu benar dari lokasi file ini.
+require_once __DIR__ . '/layouts/footer_public.php'; 
 ?>
