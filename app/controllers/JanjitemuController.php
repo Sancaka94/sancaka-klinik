@@ -112,7 +112,7 @@ class JanjiTemuController {
         $list_dokter = $dokterModel->getAll();
 
         // Memuat view form edit dan mengirim data janji temu serta daftar dokter
-        require_once BASE_PATH . . '/../views/janjitemu/edit.php';
+        require_once BASE_PATH . '/../views/janjitemu/edit.php';
     }
 
     /**
