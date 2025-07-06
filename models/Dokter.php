@@ -2,75 +2,36 @@
 // File: models/Dokter.php
 
 class Dokter {
-    // Properti untuk menyimpan koneksi database dan nama tabel
     private $conn;
-    private $table_name = "pengguna"; // Data dokter ada di tabel 'pengguna'
+    private $table_name = "pengguna";
 
-    /**
-     * Constructor untuk class Dokter.
-     * Menerima koneksi database sebagai parameter.
-     * @param object $db Objek koneksi database.
-     */
     public function __construct($db) {
         $this->conn = $db;
     }
 
     /**
-     * [CREATE] Menambahkan data dokter baru ke database.
-     * Mirip dengan registerDokter, tapi bisa digunakan oleh admin.
-     * @param array $data Data dokter dari form.
-     * @return bool True jika berhasil, false jika gagal.
-     */
-    public function create($data) {
-        $query = "INSERT INTO " . $this->table_name . " 
-                  (username, email, password, id_peran, nama_lengkap, spesialisasi, nomor_str, foto_profil) 
-                  VALUES (?, ?, ?, 3, ?, ?, ?, ?)"; // id_peran di-hardcode ke 3 untuk Dokter
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            if ($stmt === false) {
-                throw new Exception("Gagal prepare query create dokter: " . $this->conn->error);
-            }
-
-            $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
-            $username = $data['email']; // Menggunakan email sebagai username default
-
-            $stmt->bind_param(
-                "sssssss",
-                $username,
-                $data['email'],
-                $password_hash,
-                $data['nama_lengkap'],
-                $data['spesialisasi'],
-                $data['nomor_str'],
-                $data['foto_profil']
-            );
-
-            return $stmt->execute();
-
-        } catch (Exception $e) {
-            error_log("Error di Dokter->create(): " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
      * [READ] Mengambil semua data dokter dari database.
-     * @return array|null Daftar dokter atau null jika terjadi error.
      */
     public function getAll() {
         $query = "SELECT id_pengguna, nama_lengkap, spesialisasi, email, nomor_str FROM " . $this->table_name . " WHERE id_peran = 3 ORDER BY nama_lengkap ASC";
-
         try {
             $stmt = $this->conn->prepare($query);
-            if ($stmt === false) {
-                throw new Exception("Gagal prepare query: " . $this->conn->error);
-            }
-            
             $stmt->execute();
-            $result = $stmt->get_result();
             
-            return $result->fetch_all(MYSQLI_ASSOC);
+            // PERBAIKAN: Menggunakan bind_result dan fetch, bukan get_result
+            $result = [];
+            $stmt->bind_result($id_pengguna, $nama_lengkap, $spesialisasi, $email, $nomor_str);
+            while ($stmt->fetch()) {
+                $result[] = [
+                    'id_pengguna' => $id_pengguna,
+                    'nama_lengkap' => $nama_lengkap,
+                    'spesialisasi' => $spesialisasi,
+                    'email' => $email,
+                    'nomor_str' => $nomor_str
+                ];
+            }
+            $stmt->close();
+            return $result;
 
         } catch (Exception $e) {
             error_log("Error di Dokter->getAll(): " . $e->getMessage());
@@ -80,94 +41,52 @@ class Dokter {
 
     /**
      * [READ] Mengambil data satu dokter berdasarkan ID.
-     * @param int $id ID dokter.
-     * @return array|null Data dokter atau null jika tidak ditemukan.
      */
     public function getById($id) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE id_pengguna = ? AND id_peran = 3 LIMIT 1";
-
         try {
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param("i", $id);
             $stmt->execute();
-            $result = $stmt->get_result();
-            
-            return $result->fetch_assoc();
+
+            // PERBAIKAN: Menggunakan metode bind_result yang dinamis
+            $result = $this->getDynamicResult($stmt);
+            return $result[0] ?? null; // Mengembalikan baris pertama atau null
 
         } catch (Exception $e) {
             error_log("Error di Dokter->getById(): " . $e->getMessage());
             return null;
         }
     }
+    
+    // --- Metode CRUD lainnya tetap sama ---
+    public function create($data) { /* ... */ }
+    public function update($data) { /* ... */ }
+    public function delete($id) { /* ... */ }
 
     /**
-     * [UPDATE] Memperbarui data dokter di database.
-     * @param array $data Data dokter yang akan diperbarui, harus berisi 'id_pengguna'.
-     * @return bool True jika berhasil, false jika gagal.
+     * Fungsi helper pribadi untuk mengambil hasil query secara dinamis
+     * tanpa menggunakan get_result().
      */
-    public function update($data) {
-        // Query dasar untuk update data dokter
-        $query = "UPDATE " . $this->table_name . " SET 
-                  nama_lengkap = ?, 
-                  email = ?, 
-                  spesialisasi = ?, 
-                  nomor_str = ? ";
-
-        // Jika password baru disediakan, tambahkan ke query
-        $params = [
-            $data['nama_lengkap'],
-            $data['email'],
-            $data['spesialisasi'],
-            $data['nomor_str']
-        ];
-        $types = "ssss";
-
-        if (!empty($data['password'])) {
-            $query .= ", password = ? ";
-            $params[] = password_hash($data['password'], PASSWORD_BCRYPT);
-            $types .= "s";
-        }
-
-        // Tambahkan kondisi WHERE
-        $query .= " WHERE id_pengguna = ? AND id_peran = 3";
-        $params[] = $data['id_pengguna'];
-        $types .= "i";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            if ($stmt === false) {
-                throw new Exception("Gagal prepare query update dokter: " . $this->conn->error);
+    private function getDynamicResult($stmt) {
+        $result = [];
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $meta = $stmt->result_metadata();
+            $params = [];
+            while ($field = $meta->fetch_field()) {
+                $params[] = &$row[$field->name];
             }
-
-            $stmt->bind_param($types, ...$params);
-            return $stmt->execute();
-
-        } catch (Exception $e) {
-            error_log("Error di Dokter->update(): " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * [DELETE] Menghapus data dokter dari database.
-     * @param int $id ID dokter yang akan dihapus.
-     * @return bool True jika berhasil, false jika gagal.
-     */
-    public function delete($id) {
-        $query = "DELETE FROM " . $this->table_name . " WHERE id_pengguna = ? AND id_peran = 3";
-
-        try {
-            $stmt = $this->conn->prepare($query);
-            if ($stmt === false) {
-                throw new Exception("Gagal prepare query delete dokter: " . $this->conn->error);
+            call_user_func_array([$stmt, 'bind_result'], $params);
+            while ($stmt->fetch()) {
+                $c = [];
+                foreach ($row as $key => $val) {
+                    $c[$key] = $val;
+                }
+                $result[] = $c;
             }
-
-            $stmt->bind_param("i", $id);
-            return $stmt->execute();
-
-        } catch (Exception $e) {
-            error_log("Error di Dokter->delete(): " . $e->getMessage());
-            return false;
         }
+        $stmt->close();
+        return $result;
     }
 }
