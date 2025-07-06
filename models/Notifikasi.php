@@ -5,6 +5,8 @@ class Notifikasi {
     private $conn;
     private $table_name = "notifikasi"; // Asumsi nama tabel notifikasi
 
+    // [FIXED] Constructor ini hanya menerima objek koneksi database ($db)
+    // yang sudah dibuat oleh Controller.
     public function __construct($db) {
         $this->conn = $db;
     }
@@ -42,11 +44,7 @@ class Notifikasi {
     }
 
     /**
-     * [BARU] Membuat notifikasi baru.
-     * @param int $id_pengguna ID pengguna penerima notifikasi.
-     * @param string $pesan Isi pesan notifikasi.
-     * @param string|null $link URL tujuan saat notifikasi diklik.
-     * @return bool True jika berhasil, false jika gagal.
+     * Membuat notifikasi baru.
      */
     public function create($id_pengguna, $pesan, $link = null) {
         try {
@@ -65,8 +63,7 @@ class Notifikasi {
     }
 
     /**
-     * [BARU] Menghitung notifikasi yang belum dibaca oleh pengguna.
-     * @return int Jumlah notifikasi yang belum dibaca.
+     * Menghitung notifikasi yang belum dibaca oleh pengguna.
      */
     public function countUnreadByUserId($id_pengguna) {
         try {
@@ -83,8 +80,7 @@ class Notifikasi {
     }
 
     /**
-     * [BARU] Menandai semua notifikasi pengguna sebagai sudah dibaca.
-     * @return bool True jika berhasil, false jika gagal.
+     * Menandai semua notifikasi pengguna sebagai sudah dibaca.
      */
     public function markAllAsReadByUserId($id_pengguna) {
         try {
