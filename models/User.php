@@ -2,17 +2,73 @@
 // File: models/User.php
 
 class User {
-    // Properti untuk menyimpan koneksi database
+    // Properti untuk menyimpan koneksi database dan nama tabel
     private $conn;
+    private $table_name = "pengguna";
 
     /**
      * Constructor untuk class User.
-     * Menerima koneksi database sebagai parameter dan menyimpannya.
-     * @param object $db_connection Objek koneksi database (misalnya, dari mysqli).
+     * @param object $db Objek koneksi database.
      */
-    public function __construct($db_connection) {
-        // PERBAIKAN: Menyimpan koneksi database yang diberikan ke dalam properti class
-        $this->conn = $db_connection;
+    public function __construct($db) {
+        $this->conn = $db;
+    }
+
+    /**
+     * [FUNGSI YANG HILANG] Memproses login pengguna.
+     * @param string $username Username atau email pengguna.
+     * @param string $password Password yang dimasukkan pengguna.
+     * @param int $id_peran Peran yang dipilih pengguna saat login.
+     * @return array|false Data pengguna jika berhasil, false jika gagal.
+     */
+    public function login($username, $password, $id_peran) {
+        // Cari pengguna berdasarkan username atau email
+        $query = "SELECT * FROM " . $this->table_name . " WHERE (username = ? OR email = ?) AND id_peran = ?";
+        
+        try {
+            $stmt = $this->conn->prepare($query);
+            if ($stmt === false) {
+                throw new Exception("Gagal prepare query login: " . $this->conn->error);
+            }
+
+            $stmt->bind_param("ssi", $username, $username, $id_peran);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows == 1) {
+                $user = $result->fetch_assoc();
+                // Verifikasi password
+                if (password_verify($password, $user['password'])) {
+                    return $user; // Login berhasil
+                }
+            }
+            return false; // Login gagal (user tidak ditemukan atau password salah)
+
+        } catch (Exception $e) {
+            error_log("Error di User->login(): " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Mendaftarkan pengguna baru dengan peran sebagai Pasien.
+     * @param array $data Data dari form registrasi pasien.
+     * @return bool True jika berhasil, false jika gagal.
+     */
+    public function register($data) {
+        $query = "INSERT INTO " . $this->table_name . " (username, email, password, id_peran, nama_lengkap) VALUES (?, ?, ?, 4, ?)";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
+            $username = $data['email']; // Gunakan email sebagai username default
+
+            $stmt->bind_param("ssss", $username, $data['email'], $password_hash, $data['nama_lengkap']);
+            return $stmt->execute();
+        } catch (Exception $e) {
+            error_log("Error di User->register(): " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -21,58 +77,49 @@ class User {
      * @return bool True jika berhasil, false jika gagal.
      */
     public function registerDokter($data) {
-        // Query untuk menyimpan data dokter ke tabel 'pengguna'
-        $query = "INSERT INTO pengguna (username, email, password, id_peran, nama_lengkap, spesialisasi, nomor_str, foto_profil) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO " . $this->table_name . " (username, email, password, id_peran, nama_lengkap, spesialisasi, nomor_str, foto_profil) 
+                  VALUES (?, ?, ?, 3, ?, ?, ?, ?)";
 
         try {
-            // PERBAIKAN: Sekarang $this->conn sudah berisi koneksi database yang valid
             $stmt = $this->conn->prepare($query);
-            
-            // Pengecekan jika prepare gagal
-            if ($stmt === false) {
-                // Sebaiknya log error yang lebih detail
-                throw new Exception("Gagal prepare query dokter: " . $this->conn->error);
-            }
-
-            // Hash password untuk keamanan
             $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
-            
-            // Menggunakan email sebagai username default
             $username = $data['email'];
 
-            // Mengikat parameter ke statement (s=string, i=integer)
-            // Pastikan tipe data dan urutannya sesuai dengan kolom di query
             $stmt->bind_param(
-                "sssissss",
+                "sssssss",
                 $username,
                 $data['email'],
                 $password_hash,
-                $data['id_peran'], // Pastikan id_peran untuk dokter sudah benar (misal: 2)
                 $data['nama_lengkap'],
                 $data['spesialisasi'],
                 $data['nomor_str'],
-                $data['foto_profil'] // Pastikan ini adalah nama file, bukan data file
+                $data['foto_profil']
             );
-
-            // Eksekusi statement
-            if ($stmt->execute()) {
-                // Berhasil
-                return true;
-            } else {
-                // Gagal eksekusi
-                throw new Exception("Gagal eksekusi query dokter: " . $stmt->error);
-            }
-
-        } catch (Exception $exception) {
-            // Tangani dan log error jika terjadi
-            // Anda bisa membuat fungsi log sendiri atau menggunakan error_log()
-            error_log("REGISTRASI DOKTER GAGAL: " . $exception->getMessage());
+            return $stmt->execute();
+        } catch (Exception $e) {
+            error_log("Error di User->registerDokter(): " . $e->getMessage());
             return false;
         }
     }
-    
-    // Pastikan Anda juga memiliki fungsi log_to_file dan emailExists
-    private function log_to_file($message, $data = null) { /* ... */ }
-    public function emailExists($email) { /* ... */ }
+
+    /**
+     * Memeriksa apakah sebuah email sudah terdaftar di database.
+     * @param string $email Email yang akan diperiksa.
+     * @return bool True jika email sudah ada, false jika belum.
+     */
+    public function emailExists($email) {
+        $query = "SELECT id_pengguna FROM " . $this->table_name . " WHERE email = ? LIMIT 1";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $stmt->store_result();
+            
+            return $stmt->num_rows > 0;
+        } catch (Exception $e) {
+            error_log("Error di User->emailExists(): " . $e->getMessage());
+            return false; // Asumsikan tidak ada jika terjadi error
+        }
+    }
 }
