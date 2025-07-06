@@ -1,15 +1,39 @@
 <?php
+// File: controllers/AuthController.php
+
+// Panggil file koneksi dan model di bagian atas
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/User.php';
 
 class AuthController {
+    
+    // Properti untuk menyimpan koneksi database
+    private $conn;
 
-    // --- Metode yang sudah ada ---
+    /**
+     * Constructor untuk AuthController.
+     * Membuat koneksi database sekali saat controller dibuat.
+     */
+    public function __construct() {
+        // Membuat objek database dan mendapatkan koneksi
+        $database = new Database(); // Asumsi Anda punya class Database di config/database.php
+        $this->conn = $database->getConnection();
+    }
+
+    /**
+     * Menampilkan halaman form login.
+     */
     public function login() {
         require __DIR__ . '/../views/auth/login.php';
     }
 
+    /**
+     * Memproses otentikasi pengguna.
+     */
     public function authenticate() {
-        $userModel = new User();
+        // PERBAIKAN: Gunakan koneksi yang sudah ada ($this->conn) untuk membuat User model
+        $userModel = new User($this->conn);
+        
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
         $id_peran = $_POST['id_peran'] ?? '';
@@ -19,11 +43,13 @@ class AuthController {
             exit;
         }
 
+        // Panggil metode login dari model
         $user = $userModel->login($username, $password, $id_peran);
 
         if ($user) {
             if (session_status() == PHP_SESSION_NONE) session_start();
             $_SESSION['user'] = $user;
+            
             // Arahkan ke dasbor yang sesuai
             switch ($user['id_peran']) {
                 case 1: header("Location: ?url=dashboard/superadmin"); break;
@@ -39,6 +65,9 @@ class AuthController {
         exit;
     }
 
+    /**
+     * Menghapus session dan logout pengguna.
+     */
     public function logout() {
         if (session_status() == PHP_SESSION_NONE) session_start();
         session_destroy();
@@ -46,27 +75,27 @@ class AuthController {
         exit;
     }
 
+    /**
+     * Menampilkan halaman form pendaftaran pasien.
+     */
     public function register() {
         require __DIR__ . '/../views/auth/register.php';
     }
 
+    /**
+     * Memproses data dari form pendaftaran pasien.
+     */
     public function processRegister() {
-        // ... (Logika untuk registrasi pasien)
+        // PERBAIKAN: Anda juga perlu menerapkan koneksi DB di sini
+        $userModel = new User($this->conn);
+        // ... (Logika untuk registrasi pasien) ...
     }
-
-    // --- [FUNGSI BARU] Untuk Pendaftaran Dokter ---
 
     /**
      * Menampilkan halaman form pendaftaran dokter.
      */
     public function register_dokter() {
-        // Pastikan file view ini ada: views/auth/register_dokter.php
-        $view_file = __DIR__ . '/../views/auth/register_dokter.php';
-        if (file_exists($view_file)) {
-            require $view_file;
-        } else {
-            die("Error: File view untuk pendaftaran dokter tidak ditemukan.");
-        }
+        require __DIR__ . '/../views/auth/register_dokter.php';
     }
 
     /**
@@ -78,8 +107,19 @@ class AuthController {
             exit;
         }
 
-        $fotoProfilName = $this->handleFileUpload($_FILES['foto_profil'] ?? null, 'uploads/profil/');
+        // PERBAIKAN: Gunakan koneksi yang sudah ada ($this->conn) untuk membuat User model
+        $userModel = new User($this->conn);
 
+        // Cek dulu apakah email sudah ada
+        if ($userModel->emailExists($_POST['email'] ?? '')) {
+            header("Location: ?url=auth/register_dokter&error=Email sudah terdaftar.");
+            exit;
+        }
+        
+        // Handle upload file foto profil
+        $fotoProfilName = $this->handleFileUpload($_FILES['foto_profil'] ?? null, 'uploads/profiles/');
+
+        // Siapkan data untuk disimpan
         $data = [
             'nama_lengkap'  => $_POST['nama_lengkap'] ?? '',
             'email'         => $_POST['email'] ?? '',
@@ -90,13 +130,7 @@ class AuthController {
             'id_peran'      => 3 // ID Peran untuk Dokter
         ];
 
-        $userModel = new User();
-
-        if ($userModel->emailExists($data['email'])) {
-            header("Location: ?url=auth/register_dokter&error=Email sudah terdaftar.");
-            exit;
-        }
-
+        // Panggil metode registerDokter dari model
         if ($userModel->registerDokter($data)) {
             header("Location: ?url=auth/login&status=registrasi_sukses");
         } else {
@@ -105,7 +139,12 @@ class AuthController {
         exit;
     }
 
-    // Fungsi helper untuk upload file
+    /**
+     * Fungsi helper untuk menangani upload file.
+     * @param array|null $file Data file dari $_FILES.
+     * @param string $uploadDir Direktori tujuan upload.
+     * @return string|null Nama file yang unik jika berhasil, null jika gagal.
+     */
     private function handleFileUpload($file, $uploadDir) {
         if ($file === null || $file['error'] !== UPLOAD_ERR_OK) {
             return null;
