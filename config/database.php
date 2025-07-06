@@ -29,6 +29,7 @@ class Database {
         } catch (mysqli_sql_exception $exception) {
             // Jika koneksi gagal, tampilkan pesan error dan hentikan script
             // Di lingkungan produksi, sebaiknya ini dicatat ke log, bukan ditampilkan ke pengguna
+            // Lengkap
             die("Koneksi Database Gagal: " . $exception->getMessage());
         }
     }
