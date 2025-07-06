@@ -2,39 +2,13 @@
 // File: views/dashboard/pasien.php
 
 // --- DATA DARI CONTROLLER ---
-// Variabel-variabel ini seharusnya sudah disiapkan oleh DashboardController Anda.
-// Saya menggunakan data placeholder di sini untuk tujuan desain.
-// $user = $_SESSION['user'];
-// $jumlah_kunjungan = ...
-// $janji_aktif = ...
-// $riwayat_rekam_medis = ...
-// $janji_temu = ...
-// $notifikasi_belum_dibaca = ...
-// $notifikasi_list = ...
+// Semua variabel di bawah ini sudah disiapkan oleh DashboardController.php
+// dan tidak perlu didefinisikan lagi di sini.
+// $user, $jumlah_kunjungan, $janji_aktif, $riwayat_rekam_medis, 
+// $janji_temu, $notifikasi_belum_dibaca, $notifikasi_list
 
-// Placeholder data untuk demonstrasi
-$user = $_SESSION['user'] ?? ['nama_lengkap' => 'Nama Pasien', 'foto' => null];
-
-// [FIXED] Menggunakan !empty() untuk memeriksa apakah 'foto' ada dan tidak kosong.
-// Ini akan menghilangkan error "Undefined index".
+// Logika untuk path foto tetap di sini untuk menangani kasus jika foto tidak ada
 $foto_profil_path = !empty($user['foto']) ? 'uploads/profil/' . htmlspecialchars($user['foto']) : 'https://placehold.co/128x128/343a40/ffffff?text=P';
-
-$jumlah_kunjungan = 12;
-$janji_aktif = 2;
-$riwayat_rekam_medis = [
-    ['id_rekam_medis' => 101, 'tanggal_kunjungan' => '2025-06-20', 'nama_dokter' => 'Dr. Budi Santoso', 'diagnosa' => 'Flu dan Batuk'],
-    ['id_rekam_medis' => 95, 'tanggal_kunjungan' => '2025-05-15', 'nama_dokter' => 'Dr. Anisa Wijaya', 'diagnosa' => 'Sakit Kepala']
-];
-$janji_temu = [
-    ['id_janji' => 205, 'tanggal_janji' => '2025-07-10', 'waktu_janji' => '10:00', 'nama_dokter' => 'Dr. Anisa Wijaya', 'status' => 'Dikonfirmasi'],
-    ['id_janji' => 208, 'tanggal_janji' => '2025-07-18', 'waktu_janji' => '14:30', 'nama_dokter' => 'Dr. Budi Santoso', 'status' => 'Menunggu Konfirmasi']
-];
-$notifikasi_belum_dibaca = 3;
-$notifikasi_list = [
-    ['pesan' => 'Janji temu dikonfirmasi', 'waktu' => '3 jam lalu', 'icon' => 'fa-calendar-check', 'link' => '?url=janji/detail/205'],
-    ['pesan' => 'Resep baru telah terbit', 'waktu' => '1 hari lalu', 'icon' => 'fa-file-prescription', 'link' => '?url=resep/detail/78'],
-    ['pesan' => 'Pengingat jadwal kontrol', 'waktu' => '2 hari lalu', 'icon' => 'fa-info-circle', 'link' => '#']
-];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -73,15 +47,18 @@ $notifikasi_list = [
                     <?php endif; ?>
                 </a>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                    <span class="dropdown-header"><?= $notifikasi_belum_dibaca ?> Notifikasi Baru</span>
+                    <span class="dropdown-header"><?= $notifikasi_belum_dibaca ?> Notifikasi</span>
                     <div class="dropdown-divider"></div>
-                    <?php foreach($notifikasi_list as $notif): ?>
-                    <a href="<?= $notif['link'] ?>" class="dropdown-item">
-                        <i class="fas <?= $notif['icon'] ?> mr-2"></i> <?= htmlspecialchars($notif['pesan']) ?>
-                        <span class="float-right text-muted text-sm"><?= $notif['waktu'] ?></span>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <?php endforeach; ?>
+                    <?php if (!empty($notifikasi_list)): ?>
+                        <?php foreach($notifikasi_list as $notif): ?>
+                        <a href="?url=notifikasi/read/<?= $notif['id_notifikasi'] ?>" class="dropdown-item">
+                            <i class="fas fa-info-circle mr-2"></i> <?= htmlspecialchars($notif['pesan']) ?>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="text-center text-muted my-2">Tidak ada notifikasi baru.</p>
+                    <?php endif; ?>
                     <a href="?url=notifikasi" class="dropdown-item dropdown-footer">Lihat Semua Notifikasi</a>
                 </div>
             </li>
@@ -217,14 +194,18 @@ $notifikasi_list = [
                                         <tr><th>Tanggal</th><th>Dokter</th><th>Diagnosa</th><th>Aksi</th></tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($riwayat_rekam_medis as $riwayat): ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars($riwayat['tanggal_kunjungan']) ?></td>
-                                            <td><?= htmlspecialchars($riwayat['nama_dokter']) ?></td>
-                                            <td><?= htmlspecialchars($riwayat['diagnosa']) ?></td>
-                                            <td><a href="?url=rekam_medis/detail/<?= $riwayat['id_rekam_medis'] ?>" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Detail</a></td>
-                                        </tr>
-                                        <?php endforeach; ?>
+                                        <?php if (!empty($riwayat_rekam_medis)): ?>
+                                            <?php foreach ($riwayat_rekam_medis as $riwayat): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($riwayat['tanggal_kunjungan']) ?></td>
+                                                <td><?= htmlspecialchars($riwayat['nama_dokter']) ?></td>
+                                                <td><?= htmlspecialchars($riwayat['diagnosa']) ?></td>
+                                                <td><a href="?url=rekam_medis/detail/<?= $riwayat['id_rekam_medis'] ?>" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Detail</a></td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr><td colspan="4" class="text-center py-3">Belum ada riwayat rekam medis.</td></tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -243,22 +224,26 @@ $notifikasi_list = [
                                         <tr><th>Tanggal & Waktu</th><th>Dokter</th><th>Status</th><th>Aksi</th></tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($janji_temu as $janji): ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars($janji['tanggal_janji']) ?> - <?= htmlspecialchars($janji['waktu_janji']) ?></td>
-                                            <td><?= htmlspecialchars($janji['nama_dokter']) ?></td>
-                                            <td>
-                                                <?php $status_class = $janji['status'] == 'Dikonfirmasi' ? 'badge badge-success' : 'badge badge-warning'; ?>
-                                                <span class='<?= $status_class ?>'><?= htmlspecialchars($janji['status']) ?></span>
-                                            </td>
-                                            <td>
-                                                <a href="?url=janji/detail/<?= $janji['id_janji'] ?>" class="btn btn-secondary btn-sm"><i class="fas fa-search"></i> Detail</a>
-                                                <?php if ($janji['status'] == 'Menunggu Konfirmasi'): ?>
-                                                <a href="?url=janji/edit/<?= $janji['id_janji'] ?>" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Ubah</a>
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
-                                        <?php endforeach; ?>
+                                        <?php if (!empty($janji_temu)): ?>
+                                            <?php foreach ($janji_temu as $janji): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($janji['tanggal_janji']) ?> - <?= htmlspecialchars($janji['waktu_janji']) ?></td>
+                                                <td><?= htmlspecialchars($janji['nama_dokter']) ?></td>
+                                                <td>
+                                                    <?php $status_class = $janji['status'] == 'Dikonfirmasi' ? 'badge badge-success' : 'badge badge-warning'; ?>
+                                                    <span class='<?= $status_class ?>'><?= htmlspecialchars($janji['status']) ?></span>
+                                                </td>
+                                                <td>
+                                                    <a href="?url=janji/detail/<?= $janji['id_janji'] ?>" class="btn btn-secondary btn-sm"><i class="fas fa-search"></i> Detail</a>
+                                                    <?php if ($janji['status'] == 'Menunggu Konfirmasi'): ?>
+                                                    <a href="?url=janji/edit/<?= $janji['id_janji'] ?>" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Ubah</a>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr><td colspan="4" class="text-center py-3">Tidak ada janji temu.</td></tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
