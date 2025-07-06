@@ -55,7 +55,7 @@ class User {
     }
 
     /**
-     * Memperbarui profil pengguna.
+     * Memperbarui profil pengguna dengan data lengkap.
      */
     public function updateProfile($data) {
         try {
@@ -75,7 +75,11 @@ class User {
                           alamat = :alamat, 
                           foto = :foto,
                           spesialisasi = :spesialisasi,
-                          nomor_str = :nomor_str
+                          nomor_str = :nomor_str,
+                          tanggal_lahir = :tanggal_lahir,
+                          jenis_kelamin = :jenis_kelamin,
+                          no_ktp = :no_ktp,
+                          no_bpjs = :no_bpjs
                       WHERE id_pengguna = :id_pengguna";
             $stmt = $this->conn->prepare($query);
 
@@ -86,6 +90,10 @@ class User {
             $stmt->bindParam(':foto', $data['foto']);
             $stmt->bindParam(':spesialisasi', $data['spesialisasi']);
             $stmt->bindParam(':nomor_str', $data['nomor_str']);
+            $stmt->bindParam(':tanggal_lahir', $data['tanggal_lahir']);
+            $stmt->bindParam(':jenis_kelamin', $data['jenis_kelamin']);
+            $stmt->bindParam(':no_ktp', $data['no_ktp']);
+            $stmt->bindParam(':no_bpjs', $data['no_bpjs']);
             $stmt->bindParam(':id_pengguna', $data['id_pengguna'], PDO::PARAM_INT);
 
             return $stmt->execute();
@@ -96,7 +104,7 @@ class User {
     }
 
     /**
-     * Mengubah password pengguna dari halaman profil.
+     * Mengubah password dari halaman profil.
      */
     public function changePassword($id_pengguna, $oldPassword, $newPassword) {
         try {
@@ -126,7 +134,7 @@ class User {
     }
 
     /**
-     * Membuat pengguna baru (registrasi).
+     * [LENGKAP] Membuat pengguna baru (registrasi).
      */
     public function createUser($data) {
         try {
@@ -139,7 +147,7 @@ class User {
                 return false; // Pengguna sudah ada
             }
 
-            $query = "INSERT INTO " . $this->table_name . " (nama_lengkap, username, email, password, id_peran, foto, spesialisasi, nomor_str) VALUES (:nama_lengkap, :username, :email, :password, :id_peran, :foto, :spesialisasi, :nomor_str)";
+            $query = "INSERT INTO " . $this->table_name . " (nama_lengkap, username, email, password, id_peran, foto, spesialisasi, nomor_str, tanggal_lahir, jenis_kelamin, no_ktp, no_bpjs) VALUES (:nama_lengkap, :username, :email, :password, :id_peran, :foto, :spesialisasi, :nomor_str, :tanggal_lahir, :jenis_kelamin, :no_ktp, :no_bpjs)";
             $stmt = $this->conn->prepare($query);
 
             $password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
@@ -152,6 +160,10 @@ class User {
             $stmt->bindParam(':foto', $data['foto']);
             $stmt->bindParam(':spesialisasi', $data['spesialisasi']);
             $stmt->bindParam(':nomor_str', $data['nomor_str']);
+            $stmt->bindParam(':tanggal_lahir', $data['tanggal_lahir']);
+            $stmt->bindParam(':jenis_kelamin', $data['jenis_kelamin']);
+            $stmt->bindParam(':no_ktp', $data['no_ktp']);
+            $stmt->bindParam(':no_bpjs', $data['no_bpjs']);
 
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -161,7 +173,7 @@ class User {
     }
 
     /**
-     * Membuat token reset password.
+     * [LENGKAP] Membuat token reset password.
      */
     public function generateResetToken($email) {
         try {
@@ -192,35 +204,26 @@ class User {
     }
     
     /**
-     * Mengatur ulang password pengguna menggunakan token.
+     * [LENGKAP] Mengatur ulang password pengguna menggunakan token.
      */
     public function resetPassword($token, $newPassword) {
         try {
-            // Langkah 1: Validasi token terlebih dahulu
             $token_hash = hash('sha256', $token);
             $checkQuery = "SELECT id_pengguna FROM " . $this->table_name . " WHERE reset_token_hash = :token_hash AND reset_token_expires_at > NOW() LIMIT 1";
             $checkStmt = $this->conn->prepare($checkQuery);
             $checkStmt->bindParam(':token_hash', $token_hash);
             $checkStmt->execute();
 
-            // Langkah 2: Jika token valid, lanjutkan update password
             if ($checkStmt->rowCount() > 0) {
-                // Hash password baru
                 $password_hash = password_hash($newPassword, PASSWORD_BCRYPT);
-                
-                // Update password dan hapus token agar tidak bisa digunakan lagi
                 $updateQuery = "UPDATE " . $this->table_name . " SET password = :password, reset_token_hash = NULL, reset_token_expires_at = NULL WHERE reset_token_hash = :token_hash";
                 $updateStmt = $this->conn->prepare($updateQuery);
                 $updateStmt->bindParam(':password', $password_hash);
                 $updateStmt->bindParam(':token_hash', $token_hash);
                 
-                // Kembalikan true jika update berhasil
                 return $updateStmt->execute();
             }
-            
-            // Jika token tidak valid atau kedaluwarsa
             return false;
-
         } catch (PDOException $e) {
             error_log("Error di User->resetPassword(): " . $e->getMessage());
             return false;
