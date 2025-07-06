@@ -166,8 +166,6 @@ require_once __DIR__ . '/layouts/header_public.php';
     </div>
 </div>
 
-// test
-
 <?php 
 // [DIPERBAIKI] Path disesuaikan agar selalu benar dari lokasi file ini.
 require_once __DIR__ . '/layouts/footer_public.php'; 
